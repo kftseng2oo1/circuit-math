@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Circuit Math">
+<meta name="theme-color" content="#00ffb3">
+<meta name="description" content="AC/DC/數學/雙埠網路/元件工具 — 全功能電路計算器">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+<link rel="apple-touch-icon" sizes="144x144" href="icon-144.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<title>電路數學工具箱 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+:root {
+  --bg:      #07090f;
+  --panel:   #0b0f1a;
+  --panel2:  #0f1520;
+  --border:  #1c2940;
+  --border2: #263650;
+  --ac:      #00ffb3;
+  --dc:      #ff9f1c;
+  --math:    #a78bfa;
+  --extra:   #38bdf8;
+  --tp:      #f472b6;   /* Two-Port — pink */
+  --gtp:     0 0 14px rgba(244,114,182,.4);
+  --err:     #ff5f5f;
+  --ok:      #4ade80;
+  --text:    #b8d0e8;
+  --dim:     #354a68;
+  --dim2:    #4e6a8a;
+  --gac:     0 0 14px rgba(0,255,179,.4);
+  --gdc:     0 0 14px rgba(255,159,28,.4);
+  --gmath:   0 0 14px rgba(167,139,250,.4);
+  --gex:     0 0 14px rgba(56,189,248,.4);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;font-weight:400;line-height:1.5;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,255,179,.016) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,179,.016) 1px,transparent 1px);
+  background-size:60px 60px;}
+
+/* ─── LAYOUT ─── */
+.app-wrap{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh;}
+.top-nav{display:flex;align-items:center;background:rgba(7,9,15,.92);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(10px);position:sticky;top:0;z-index:200;padding:0 16px;flex-wrap:wrap;}
+.brand{font-family:'Share Tech Mono',monospace;font-size:.82rem;letter-spacing:4px;color:var(--ac);
+  text-shadow:var(--gac);padding:13px 16px 13px 0;border-right:1px solid var(--border);white-space:nowrap;}
+.brand span{font-size:.6rem;color:var(--dim2);letter-spacing:1px;margin-left:6px;}
+.nav-tabs{display:flex;flex:1;flex-wrap:wrap;}
+.nav-tab{padding:13px 15px;font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:2px;
+  color:var(--dim2);background:transparent;border:none;cursor:pointer;transition:all .2s;
+  border-bottom:2px solid transparent;white-space:nowrap;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.ac-tab.active{color:var(--ac);border-bottom-color:var(--ac);text-shadow:var(--gac);}
+.nav-tab.dc-tab.active{color:var(--dc);border-bottom-color:var(--dc);text-shadow:var(--gdc);}
+.nav-tab.math-tab.active{color:var(--math);border-bottom-color:var(--math);text-shadow:var(--gmath);}
+.nav-tab.extra-tab.active{color:var(--extra);border-bottom-color:var(--extra);text-shadow:var(--gex);}
+.nav-tab.tp-tab.active{color:var(--tp);border-bottom-color:var(--tp);text-shadow:var(--gtp);}
+.tab-badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.58rem;margin-left:4px;vertical-align:middle;}
+.ac-badge{background:rgba(0,255,179,.15);color:var(--ac);}
+.dc-badge{background:rgba(255,159,28,.15);color:var(--dc);}
+.math-badge{background:rgba(167,139,250,.15);color:var(--math);}
+.extra-badge{background:rgba(56,189,248,.15);color:var(--extra);}
+.tp-badge{background:rgba(244,114,182,.15);color:var(--tp);}
+
+/* ─── CONTENT ─── */
+.content{flex:1;}
+.section-page{display:none;padding:22px 18px 52px;}
+.section-page.active{display:block;}
+.sec-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.sec-icon{font-size:1.7rem;}
+.sec-title{font-family:'Share Tech Mono',monospace;font-size:1rem;letter-spacing:3px;}
+.sec-sub{font-size:.78rem;color:var(--dim2);letter-spacing:1px;margin-top:2px;}
+
+/* ─── TOOL GRID ─── */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;}
+
+/* ─── CARD ─── */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:18px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;}
+.card.ac-card::before{background:linear-gradient(90deg,transparent,var(--ac),transparent);}
+.card.dc-card::before{background:linear-gradient(90deg,transparent,var(--dc),transparent);}
+.card.math-card::before{background:linear-gradient(90deg,transparent,var(--math),transparent);}
+.card.extra-card::before{background:linear-gradient(90deg,transparent,var(--extra),transparent);}
+.card.tp-card::before{background:linear-gradient(90deg,transparent,var(--tp),transparent);}
+.card-title{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:2px;margin-bottom:13px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ac-card .card-title{color:var(--ac);}
+.dc-card .card-title{color:var(--dc);}
+.math-card .card-title{color:var(--math);}
+.extra-card .card-title{color:var(--extra);}
+.tp-card .card-title{color:var(--tp);}
+
+/* ─── COPY BUTTON ─── */
+.copy-btn{padding:3px 9px;font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:1px;
+  background:transparent;border:1px solid var(--dim);border-radius:3px;color:var(--dim2);cursor:pointer;
+  transition:all .18s;flex-shrink:0;}
+.copy-btn:hover{border-color:var(--ok);color:var(--ok);}
+.copy-btn.copied{border-color:var(--ok);color:var(--ok);background:rgba(74,222,128,.08);}
+
+/* ─── FORM ─── */
+.ig{display:flex;flex-direction:column;gap:4px;margin-bottom:10px;}
+.ig2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ig3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+label{font-family:'Share Tech Mono',monospace;font-size:.63rem;letter-spacing:2px;color:var(--dim2);}
+input,select{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:9px 10px;
+  color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.88rem;outline:none;
+  transition:border-color .2s,box-shadow .2s;width:100%;}
+input:focus{border-color:var(--ac);box-shadow:var(--gac);}
+.dc-card input:focus,.dc-card select:focus{border-color:var(--dc);box-shadow:var(--gdc);}
+.math-card input:focus,.math-card select:focus{border-color:var(--math);box-shadow:var(--gmath);}
+.extra-card input:focus,.extra-card select:focus{border-color:var(--extra);box-shadow:var(--gex);}
+select{cursor:pointer;}
+
+/* ─── BUTTONS ─── */
+.btn{width:100%;padding:10px;border:none;border-radius:6px;font-family:'Share Tech Mono',monospace;
+  font-size:.8rem;letter-spacing:2px;cursor:pointer;transition:all .18s;margin-top:7px;font-weight:600;}
+.btn-ac{background:rgba(0,255,179,.1);color:var(--ac);border:1px solid rgba(0,255,179,.28);}
+.btn-ac:hover{background:rgba(0,255,179,.2);box-shadow:var(--gac);transform:translateY(-1px);}
+.btn-dc{background:rgba(255,159,28,.1);color:var(--dc);border:1px solid rgba(255,159,28,.28);}
+.btn-dc:hover{background:rgba(255,159,28,.2);box-shadow:var(--gdc);transform:translateY(-1px);}
+.btn-math{background:rgba(167,139,250,.1);color:var(--math);border:1px solid rgba(167,139,250,.28);}
+.btn-math:hover{background:rgba(167,139,250,.2);box-shadow:var(--gmath);transform:translateY(-1px);}
+.btn-extra{background:rgba(56,189,248,.1);color:var(--extra);border:1px solid rgba(56,189,248,.28);}
+.btn-extra:hover{background:rgba(56,189,248,.2);box-shadow:var(--gex);transform:translateY(-1px);}
+.btn-tp{background:rgba(244,114,182,.1);color:var(--tp);border:1px solid rgba(244,114,182,.28);}
+.btn-tp:hover{background:rgba(244,114,182,.2);box-shadow:var(--gtp);transform:translateY(-1px);}
+
+/* ─── RESULT BOX ─── */
+.result-box{background:rgba(0,0,0,.28);border:1px solid var(--border2);border-radius:7px;
+  padding:13px;margin-top:9px;min-height:46px;font-family:'Share Tech Mono',monospace;font-size:.86rem;line-height:1.7;}
+.result-box.ac-res{border-left:3px solid var(--ac);}
+.result-box.dc-res{border-left:3px solid var(--dc);}
+.result-box.math-res{border-left:3px solid var(--math);}
+.result-box.extra-res{border-left:3px solid var(--extra);}
+.result-box.tp-res{border-left:3px solid var(--tp);}
+.res-val{color:#e8f4ff;font-size:1.02rem;}
+.res-label{color:var(--dim2);font-size:.68rem;display:block;margin-bottom:1px;}
+.res-row{margin:4px 0;}
+.err-text{color:var(--err);}
+.ok-text{color:var(--ok);}
+.e-series-match{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:4px;
+  padding:6px 10px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;}
+.e-series-match span{color:var(--ok);font-size:.9rem;}
+.e-series-match small{color:var(--dim2);font-size:.68rem;}
+
+/* ─── FORMULA HINT ─── */
+.formula-hint{font-size:.7rem;color:var(--dim2);margin-top:9px;padding:7px 10px;
+  background:rgba(255,255,255,.018);border-radius:4px;border-left:2px solid var(--dim);
+  font-family:'Share Tech Mono',monospace;line-height:1.6;}
+
+/* ─── CANVAS ─── */
+canvas{display:block;width:100%!important;border-radius:6px;border:1px solid var(--border);margin-top:8px;}
+
+/* ─── MODE TOGGLE ─── */
+.mode-strip{display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap;}
+.mode-btn{padding:5px 11px;background:var(--panel2);border:1px solid var(--border);border-radius:4px;
+  font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:1px;color:var(--dim2);cursor:pointer;transition:all .18s;}
+.mode-btn.active{border-color:var(--ac);color:var(--ac);}
+.dc-card .mode-btn.active{border-color:var(--dc);color:var(--dc);}
+.math-card .mode-btn.active{border-color:var(--math);color:var(--math);}
+.extra-card .mode-btn.active{border-color:var(--extra);color:var(--extra);}
+.tp-card .mode-btn.active{border-color:var(--tp);color:var(--tp);}
+
+/* ─── TRIG TABLE ─── */
+.trig-table{width:100%;border-collapse:collapse;margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:.75rem;}
+.trig-table th{color:var(--math);padding:5px;border-bottom:1px solid var(--border);text-align:center;}
+.trig-table td{padding:4px 7px;border-bottom:1px solid rgba(28,41,64,.4);text-align:center;color:var(--text);}
+.trig-table tr:hover td{background:rgba(167,139,250,.05);}
+
+/* ─── MATRIX GRID ─── */
+.matrix-grid{display:grid;gap:5px;margin:8px 0;}
+.matrix-grid input{font-size:.8rem;padding:7px;text-align:center;}
+
+/* ─── 555 TIMER ─── */
+.duty-bar{height:8px;background:var(--border);border-radius:4px;margin:8px 0;overflow:hidden;}
+.duty-fill{height:100%;background:linear-gradient(90deg,var(--dc),var(--ac));border-radius:4px;transition:width .3s;}
+
+/* ─── TOAST ─── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:10px 18px;border-radius:8px;
+  font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:1px;
+  background:rgba(11,15,26,.95);border:1px solid var(--ok);color:var(--ok);
+  transform:translateY(20px);opacity:0;transition:all .3s;pointer-events:none;}
+#toast.show{transform:translateY(0);opacity:1;}
+
+/* ─── HEX/BIN TABLE ─── */
+.radix-display{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;align-items:center;margin-top:8px;}
+.radix-label{font-size:.65rem;color:var(--dim2);}
+.radix-val{font-size:.92rem;color:#e8f4ff;word-break:break-all;}
+
+/* ─── TWO-PORT NETWORK ─── */
+.tp-matrix{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:6px 10px;align-items:center;margin:10px 0;}
+.tp-matrix .pm-label{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--dim2);white-space:nowrap;}
+.tp-matrix .pm-row-label{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--tp);font-weight:600;}
+.tp-diagram{text-align:center;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:6px;
+  padding:10px;margin:8px 0;}
+.tp-diagram svg text{font-family:'Share Tech Mono',monospace;}
+.param-matrix{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0;}
+.param-cell{background:rgba(244,114,182,.06);border:1px solid rgba(244,114,182,.2);border-radius:5px;
+  padding:8px 10px;font-family:'Share Tech Mono',monospace;}
+.param-cell .pc-label{font-size:.6rem;color:var(--dim2);display:block;margin-bottom:2px;}
+.param-cell .pc-val{font-size:.9rem;color:#fff;}
+.conv-arrow{text-align:center;color:var(--tp);font-size:1.2rem;margin:6px 0;}
+.tp-input-grid{display:grid;grid-template-columns:auto 1fr 1fr;gap:6px 10px;align-items:center;margin:8px 0;}
+.tp-input-grid .tp-row-lbl{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--tp);}
+.tp-input-grid input{padding:7px 9px;font-size:.82rem;}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:600px){
+  .tool-grid{grid-template-columns:1fr;}
+  .nav-tab{padding:11px 10px;font-size:.6rem;letter-spacing:1px;}
+  .brand{font-size:.72rem;}
+}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+<nav class="top-nav">
+  <div class="brand">⚡ CIRCUIT MATH <span>v2</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab ac-tab" onclick="showSection('ac')">交流 AC <span class="tab-badge ac-badge">~</span></button>
+    <button class="nav-tab dc-tab" onclick="showSection('dc')">直流 DC <span class="tab-badge dc-badge">⎓</span></button>
+    <button class="nav-tab math-tab" onclick="showSection('math')">數學工具 <span class="tab-badge math-badge">∑</span></button>
+    <button class="nav-tab extra-tab" onclick="showSection('extra')">元件工具 <span class="tab-badge extra-badge">IC</span></button>
+    <button class="nav-tab tp-tab" onclick="showSection('tp')">雙埠網路 <span class="tab-badge tp-badge">2-P</span></button>
+  </div>
+</nav>
+
+<div id="toast"></div>
+<div class="content">
+
+<!-- ══════════════ AC ══════════════ -->
+<div id="sec-ac" class="section-page">
+  <div class="sec-header">
+    <div class="sec-icon">〜</div>
+    <div><div class="sec-title" style="color:var(--ac)">交流電路 AC ANALYSIS</div>
+    <div class="sec-sub">複數阻抗 · 相量 · 波德圖 · 功率因數 · 濾波器 · 諧振</div></div>
+  </div>
+  <div class="tool-grid">
+
+    <!-- 複數計算器 (math.js 深度整合) -->
+    <div class="card ac-card">
+      <div class="card-title">◈ 複數計算器 (支援表達式)
+        <button class="copy-btn" onclick="copyResult('cm-result')">複製</button></div>
+      <div class="ig"><label>表達式 (支援直接輸入如 (3+4i)*(1-2i))</label>
+        <input type="text" id="cm-expr" value="(3+4i)/(1-2i)" placeholder="(3+4i)*(1-2i) 或 sqrt(-1)"></div>
+      <button class="btn btn-ac" onclick="cmEval()">計算表達式</button>
+      <div style="height:6px"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:6px;">── 或使用結構化輸入 ──</div>
+      <div class="mode-strip">
+        <button class="mode-btn active" id="cma-rect-btn" onclick="cmMode('rect','A')">直角 Z₁</button>
+        <button class="mode-btn" id="cma-polar-btn" onclick="cmMode('polar','A')">極座標 Z₁</button>
+      </div>
+      <div id="cm-rect-A"><div class="ig2">
+        <div class="ig"><label>Re(Z₁)</label><input type="number" id="cm-a-re" value="3" step="any"></div>
+        <div class="ig"><label>Im(Z₁)</label><input type="number" id="cm-a-im" value="4" step="any"></div>
+      </div></div>
+      <div id="cm-polar-A" style="display:none"><div class="ig2">
+        <div class="ig"><label>|Z₁|</label><input type="number" id="cm-a-mod" value="5" step="any" min="0"></div>
+        <div class="ig"><label>∠° (度)</label><input type="number" id="cm-a-ang" value="53.13" step="any"></div>
+      </div></div>
+      <div class="mode-strip">
+        <button class="mode-btn active" id="cmb-rect-btn" onclick="cmMode('rect','B')">直角 Z₂</button>
+        <button class="mode-btn" id="cmb-polar-btn" onclick="cmMode('polar','B')">極座標 Z₂</button>
+      </div>
+      <div id="cm-rect-B"><div class="ig2">
+        <div class="ig"><label>Re(Z₂)</label><input type="number" id="cm-b-re" value="1" step="any"></div>
+        <div class="ig"><label>Im(Z₂)</label><input type="number" id="cm-b-im" value="-2" step="any"></div>
+      </div></div>
+      <div id="cm-polar-B" style="display:none"><div class="ig2">
+        <div class="ig"><label>|Z₂|</label><input type="number" id="cm-b-mod" value="1" step="any" min="0"></div>
+        <div class="ig"><label>∠° (度)</label><input type="number" id="cm-b-ang" value="0" step="any"></div>
+      </div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:8px;">
+        <button class="btn btn-ac" onclick="cmCalc('+')" style="font-size:1.1rem">+</button>
+        <button class="btn btn-ac" onclick="cmCalc('-')" style="font-size:1.1rem">−</button>
+        <button class="btn btn-ac" onclick="cmCalc('*')" style="font-size:1.1rem">×</button>
+        <button class="btn btn-ac" onclick="cmCalc('/')" style="font-size:1.1rem">÷</button>
+      </div>
+      <div class="result-box ac-res" id="cm-result">輸入複數或表達式後計算</div>
+      <canvas id="phasor-canvas" height="180"></canvas>
+    </div>
+
+    <!-- 格式轉換 -->
+    <div class="card ac-card">
+      <div class="card-title">◈ 格式轉換 (直角 ↔ 極座標)
+        <button class="copy-btn" onclick="copyResult('conv-result')">複製</button></div>
+      <div class="ig"><label>直角: a + bj</label><input type="text" id="conv-rect" value="3+4j" placeholder="3+4j 或 3-4j"></div>
+      <button class="btn btn-ac" onclick="convRectToPolar()">直角 → 極座標</button>
+      <div class="ig" style="margin-top:11px"><label>極座標: r∠θ°</label><input type="text" id="conv-polar" value="5∠53.13" placeholder="5∠53.13 或 5,53.13"></div>
+      <button class="btn btn-ac" onclick="convPolarToRect()">極座標 → 直角</button>
+      <div class="result-box ac-res" id="conv-result">輸入數值後點擊轉換</div>
+      <div class="formula-hint">|Z|=√(a²+b²) · θ=atan2(b,a)·180/π<br>exp(jθ) = cosθ + j·sinθ (歐拉公式)</div>
+    </div>
+
+    <!-- 阻抗計算 (自動單位縮放) -->
+    <div class="card ac-card">
+      <div class="card-title">◈ 元件阻抗計算
+        <button class="copy-btn" onclick="copyResult('imp-result')">複製</button></div>
+      <div class="ig"><label>頻率 f (Hz)</label><input type="number" id="imp-f" value="60" step="any" min="0"></div>
+      <div class="ig3">
+        <div class="ig"><label>R (Ω)</label><input type="number" id="imp-r" value="100" step="any" min="0"></div>
+        <div class="ig"><label>L (mH)</label><input type="number" id="imp-l" value="10" step="any" min="0"></div>
+        <div class="ig"><label>C (μF)</label><input type="number" id="imp-c" value="100" step="any" min="0"></div>
+      </div>
+      <div class="mode-strip" id="imp-mode">
+        <button class="mode-btn active" onclick="setImpMode('series')">串聯</button>
+        <button class="mode-btn" onclick="setImpMode('parallel')">並聯</button>
+      </div>
+      <button class="btn btn-ac" onclick="calcImpedance()">計算阻抗</button>
+      <div class="result-box ac-res" id="imp-result">點擊計算</div>
+      <div class="formula-hint">Z_R=R · Z_L=jωL · Z_C=1/jωC<br>串聯: Z=ΣZₙ · 並聯: 1/Z=Σ(1/Zₙ)</div>
+    </div>
+
+    <!-- 交流功率 -->
+    <div class="card ac-card">
+      <div class="card-title">◈ 交流功率分析
+        <button class="copy-btn" onclick="copyResult('pwr-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>V (Vrms)</label><input type="number" id="pwr-v" value="220" step="any" min="0"></div>
+        <div class="ig"><label>I (Arms)</label><input type="number" id="pwr-i" value="10" step="any" min="0"></div>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>R (Ω)</label><input type="number" id="pwr-r" value="18" step="any"></div>
+        <div class="ig"><label>X (Ω)</label><input type="number" id="pwr-x" value="10" step="any"></div>
+      </div>
+      <button class="btn btn-ac" onclick="calcPower()">計算功率</button>
+      <div class="result-box ac-res" id="pwr-result">點擊計算</div>
+      <div class="formula-hint">P=VI·cosθ (W) · Q=VI·sinθ (VAR) · S=VI (VA)<br>PF=cosθ=R/|Z|</div>
+    </div>
+
+    <!-- LC 諧振 -->
+    <div class="card ac-card">
+      <div class="card-title">◈ LC 諧振分析
+        <button class="copy-btn" onclick="copyResult('res-result')">複製</button></div>
+      <div class="ig3">
+        <div class="ig"><label>L (mH)</label><input type="number" id="res-l" value="10" step="any" min="0.001"></div>
+        <div class="ig"><label>C (μF)</label><input type="number" id="res-c" value="100" step="any" min="0.001"></div>
+        <div class="ig"><label>R (Ω)</label><input type="number" id="res-r" value="5" step="any" min="0"></div>
+      </div>
+      <button class="btn btn-ac" onclick="calcResonance()">計算諧振</button>
+      <div class="result-box ac-res" id="res-result">點擊計算</div>
+      <div class="formula-hint">f₀=1/(2π√LC) · Q=ω₀L/R · BW=f₀/Q</div>
+    </div>
+
+    <!-- 一階濾波器設計 (新增) -->
+    <div class="card ac-card">
+      <div class="card-title">◈ 一階濾波器設計
+        <button class="copy-btn" onclick="copyResult('filter-result')">複製</button></div>
+      <div class="mode-strip" id="filter-type-strip">
+        <button class="mode-btn active" onclick="setFilterType('RC-LP')">RC 低通</button>
+        <button class="mode-btn" onclick="setFilterType('RC-HP')">RC 高通</button>
+        <button class="mode-btn" onclick="setFilterType('RL-LP')">RL 低通</button>
+        <button class="mode-btn" onclick="setFilterType('RL-HP')">RL 高通</button>
+      </div>
+      <div class="ig2" id="filter-rc">
+        <div class="ig"><label>R (Ω)</label><input type="number" id="flt-r" value="1000" step="any" min="0"></div>
+        <div class="ig"><label>C (μF)</label><input type="number" id="flt-c" value="0.159" step="any" min="0"></div>
+      </div>
+      <div class="ig" id="filter-rl" style="display:none">
+        <div class="ig2">
+          <div class="ig"><label>R (Ω)</label><input type="number" id="flt-r2" value="100" step="any" min="0"></div>
+          <div class="ig"><label>L (mH)</label><input type="number" id="flt-l" value="15.9" step="any" min="0"></div>
+        </div>
+      </div>
+      <button class="btn btn-ac" onclick="calcFilter()">計算截止頻率</button>
+      <div class="result-box ac-res" id="filter-result">點擊計算</div>
+      <div class="formula-hint">RC: fc=1/(2πRC) · RL: fc=R/(2πL)<br>截止頻率處增益=-3dB (=0.707倍)</div>
+    </div>
+
+    <!-- 波德圖 -->
+    <div class="card ac-card" style="grid-column: span 1">
+      <div class="card-title">◈ 波德圖 (Bode Plot)</div>
+      <div class="ig"><label>分子 H(s) Numerator</label><input type="text" id="bode-num" value="1" placeholder="1 或 s+2"></div>
+      <div class="ig"><label>分母 H(s) Denominator</label><input type="text" id="bode-den" value="s+1" placeholder="s+1 或 s^2+2*s+1"></div>
+      <div class="ig2">
+        <div class="ig"><label>起始頻率 10^</label><input type="number" id="bode-start" value="-2" step="1"></div>
+        <div class="ig"><label>結束頻率 10^</label><input type="number" id="bode-end" value="3" step="1"></div>
+      </div>
+      <button class="btn btn-ac" onclick="drawBode()">繪製波德圖</button>
+      <canvas id="bode-mag" height="170"></canvas>
+      <canvas id="bode-phase" height="130" style="margin-top:7px"></canvas>
+      <div id="bode-error" class="err-text" style="font-size:.78rem;margin-top:5px"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ DC ══════════════ -->
+<div id="sec-dc" class="section-page">
+  <div class="sec-header">
+    <div class="sec-icon">⎓</div>
+    <div><div class="sec-title" style="color:var(--dc)">直流電路 DC ANALYSIS</div>
+    <div class="sec-sub">歐姆定律 · 分壓分流 · Delta-Y · Cramer · E-Series 匹配 · 變壓器</div></div>
+  </div>
+  <div class="tool-grid">
+
+    <!-- 歐姆定律 -->
+    <div class="card dc-card">
+      <div class="card-title">◈ 歐姆定律計算器
+        <button class="copy-btn" onclick="copyResult('ohm-result')">複製</button></div>
+      <div class="ig3">
+        <div class="ig"><label>V (V)</label><input type="number" id="ohm-v" placeholder="?" step="any"></div>
+        <div class="ig"><label>I (A)</label><input type="number" id="ohm-i" placeholder="?" step="any"></div>
+        <div class="ig"><label>R (Ω)</label><input type="number" id="ohm-r" placeholder="?" step="any"></div>
+      </div>
+      <div class="ig"><label>P (W)</label><input type="number" id="ohm-p" placeholder="?" step="any"></div>
+      <button class="btn btn-dc" onclick="calcOhm()">自動求解</button>
+      <div class="result-box dc-res" id="ohm-result">輸入任意兩個已知量</div>
+      <div class="formula-hint">V=IR · P=VI=I²R=V²/R</div>
+    </div>
+
+    <!-- 分壓分流 -->
+    <div class="card dc-card">
+      <div class="card-title">◈ 分壓 / 分流 計算器
+        <button class="copy-btn" onclick="copyResult('div-result')">複製</button></div>
+      <div class="mode-strip" id="div-mode-strip">
+        <button class="mode-btn active" onclick="setDivMode('voltage')">分壓</button>
+        <button class="mode-btn" onclick="setDivMode('current')">分流</button>
+      </div>
+      <div id="div-voltage">
+        <div class="ig"><label>總電壓 Vs (V)</label><input type="number" id="dv-vs" value="12" step="any"></div>
+        <div class="ig2">
+          <div class="ig"><label>R₁ (Ω)</label><input type="number" id="dv-r1" value="10" step="any" min="0"></div>
+          <div class="ig"><label>R₂ (Ω)</label><input type="number" id="dv-r2" value="20" step="any" min="0"></div>
+        </div>
+      </div>
+      <div id="div-current" style="display:none">
+        <div class="ig"><label>總電流 Is (A)</label><input type="number" id="dc-is" value="6" step="any"></div>
+        <div class="ig2">
+          <div class="ig"><label>R₁ (Ω)</label><input type="number" id="dc-r1" value="10" step="any" min="0"></div>
+          <div class="ig"><label>R₂ (Ω)</label><input type="number" id="dc-r2" value="20" step="any" min="0"></div>
+        </div>
+      </div>
+      <button class="btn btn-dc" onclick="calcDivider()">計算</button>
+      <div class="result-box dc-res" id="div-result">點擊計算</div>
+    </div>
+
+    <!-- Delta-Y -->
+    <div class="card dc-card">
+      <div class="card-title">◈ Delta ↔ Y 轉換
+        <button class="copy-btn" onclick="copyResult('dy-result')">複製</button></div>
+      <div class="mode-strip" id="dy-mode-strip">
+        <button class="mode-btn active" onclick="setDYMode('deltaY')">△ → Y</button>
+        <button class="mode-btn" onclick="setDYMode('yDelta')">Y → △</button>
+      </div>
+      <div id="dy-delta"><div class="ig3">
+        <div class="ig"><label>Rab (Ω)</label><input type="number" id="dy-rab" value="30" step="any" min="0"></div>
+        <div class="ig"><label>Rbc (Ω)</label><input type="number" id="dy-rbc" value="30" step="any" min="0"></div>
+        <div class="ig"><label>Rca (Ω)</label><input type="number" id="dy-rca" value="30" step="any" min="0"></div>
+      </div></div>
+      <div id="dy-y" style="display:none"><div class="ig3">
+        <div class="ig"><label>Ra (Ω)</label><input type="number" id="dy-ra" value="10" step="any" min="0"></div>
+        <div class="ig"><label>Rb (Ω)</label><input type="number" id="dy-rb" value="10" step="any" min="0"></div>
+        <div class="ig"><label>Rc (Ω)</label><input type="number" id="dy-rc" value="10" step="any" min="0"></div>
+      </div></div>
+      <button class="btn btn-dc" onclick="calcDeltaY()">轉換</button>
+      <div class="result-box dc-res" id="dy-result">點擊計算</div>
+    </div>
+
+    <!-- 電阻串並聯 + E-Series (新增) -->
+    <div class="card dc-card">
+      <div class="card-title">◈ 電阻合成 + E-Series 標稱匹配
+        <button class="copy-btn" onclick="copyResult('res-result')">複製</button></div>
+      <div class="ig"><label>輸入電阻 (逗號分隔, Ω)</label><input type="text" id="res-list" value="10, 20, 30" placeholder="10, 20, 30, ..."></div>
+      <div class="mode-strip" id="res-mode-strip">
+        <button class="mode-btn active" onclick="setResMode('series')">串聯</button>
+        <button class="mode-btn" onclick="setResMode('parallel')">並聯</button>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>E-Series 匹配</label>
+          <select id="eseries-sel">
+            <option value="none">不顯示</option>
+            <option value="E12" selected>E12</option>
+            <option value="E24">E24</option>
+            <option value="E48">E48</option>
+            <option value="E96">E96</option>
+          </select>
+        </div>
+        <div class="ig"><label>&nbsp;</label>
+          <button class="btn btn-dc" style="margin-top:0" onclick="calcResistors()">計算</button>
+        </div>
+      </div>
+      <div class="result-box dc-res" id="res-result">點擊計算</div>
+      <div class="formula-hint">串: R_eq=ΣRₙ · 並: 1/R_eq=Σ(1/Rₙ)<br>E-Series: 自動推薦最近標稱值 ±誤差%</div>
+    </div>
+
+    <!-- 變壓器計算 (新增) -->
+    <div class="card dc-card">
+      <div class="card-title">◈ 變壓器計算
+        <button class="copy-btn" onclick="copyResult('xfmr-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>匝數 N₁</label><input type="number" id="xfmr-n1" value="100" step="1" min="1"></div>
+        <div class="ig"><label>匝數 N₂</label><input type="number" id="xfmr-n2" value="20" step="1" min="1"></div>
+      </div>
+      <div class="ig3">
+        <div class="ig"><label>V₁ (V)</label><input type="number" id="xfmr-v1" value="220" step="any" min="0"></div>
+        <div class="ig"><label>I₁ (A)</label><input type="number" id="xfmr-i1" placeholder="?" step="any" min="0"></div>
+        <div class="ig"><label>Z_L (Ω)</label><input type="number" id="xfmr-zl" value="10" step="any" min="0"></div>
+      </div>
+      <button class="btn btn-dc" onclick="calcTransformer()">計算</button>
+      <div class="result-box dc-res" id="xfmr-result">點擊計算</div>
+      <div class="formula-hint">a=N₁/N₂ · V₂=V₁/a · I₂=I₁·a<br>Z_in=a²·Z_L (阻抗轉換)</div>
+    </div>
+
+    <!-- 2×2 Cramer -->
+    <div class="card dc-card">
+      <div class="card-title">◈ 克拉瑪 2×2 聯立方程
+        <button class="copy-btn" onclick="copyResult('cr2-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--dim2);margin-bottom:7px;">a₁x+b₁y=c₁ &nbsp;|&nbsp; a₂x+b₂y=c₂</div>
+      <div class="ig3">
+        <div class="ig"><label>a₁</label><input type="number" id="cr2-a1" value="2" step="any"></div>
+        <div class="ig"><label>b₁</label><input type="number" id="cr2-b1" value="1" step="any"></div>
+        <div class="ig"><label>c₁</label><input type="number" id="cr2-c1" value="5" step="any"></div>
+      </div>
+      <div class="ig3">
+        <div class="ig"><label>a₂</label><input type="number" id="cr2-a2" value="1" step="any"></div>
+        <div class="ig"><label>b₂</label><input type="number" id="cr2-b2" value="3" step="any"></div>
+        <div class="ig"><label>c₂</label><input type="number" id="cr2-c2" value="10" step="any"></div>
+      </div>
+      <button class="btn btn-dc" onclick="calcCramer2()">克拉瑪求解</button>
+      <div class="result-box dc-res" id="cr2-result">點擊計算</div>
+    </div>
+
+    <!-- 3×3 Cramer -->
+    <div class="card dc-card">
+      <div class="card-title">◈ 克拉瑪 3×3 聯立方程
+        <button class="copy-btn" onclick="copyResult('cr3-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:7px;">每列: aᵢx + bᵢy + cᵢz = dᵢ</div>
+      <div class="matrix-grid" style="grid-template-columns:repeat(4,1fr)">
+        <input type="number" id="c3-a1" value="2" step="any" placeholder="a₁">
+        <input type="number" id="c3-b1" value="1" step="any" placeholder="b₁">
+        <input type="number" id="c3-c1" value="1" step="any" placeholder="c₁">
+        <input type="number" id="c3-d1" value="6" step="any" placeholder="d₁">
+        <input type="number" id="c3-a2" value="1" step="any" placeholder="a₂">
+        <input type="number" id="c3-b2" value="2" step="any" placeholder="b₂">
+        <input type="number" id="c3-c2" value="-1" step="any" placeholder="c₂">
+        <input type="number" id="c3-d2" value="3" step="any" placeholder="d₂">
+        <input type="number" id="c3-a3" value="3" step="any" placeholder="a₃">
+        <input type="number" id="c3-b3" value="-1" step="any" placeholder="b₃">
+        <input type="number" id="c3-c3" value="2" step="any" placeholder="c₃">
+        <input type="number" id="c3-d3" value="10" step="any" placeholder="d₃">
+      </div>
+      <button class="btn btn-dc" onclick="calcCramer3()">克拉瑪求解</button>
+      <div class="result-box dc-res" id="cr3-result">點擊計算</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ MATH ══════════════ -->
+<div id="sec-math" class="section-page">
+  <div class="sec-header">
+    <div class="sec-icon">∑</div>
+    <div><div class="sec-title" style="color:var(--math)">數學工具 MATH TOOLS</div>
+    <div class="sec-sub">三角函數 · 指數對數 · dB · 向量 · 微積分 · 數制轉換 · 線性插值</div></div>
+  </div>
+  <div class="tool-grid">
+
+    <!-- 三角函數 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 三角函數計算器
+        <button class="copy-btn" onclick="copyResult('trig-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>角度值</label><input type="number" id="trig-val" value="45" step="any"></div>
+        <div class="ig"><label>單位</label>
+          <select id="trig-unit"><option value="deg">度 (°)</option><option value="rad">弧度 (rad)</option></select>
+        </div>
+      </div>
+      <button class="btn btn-math" onclick="calcTrig()">計算所有三角函數</button>
+      <div class="result-box math-res" id="trig-result">點擊計算</div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--dim2);margin:8px 0 4px">常用角度速查</div>
+      <table class="trig-table">
+        <tr><th>θ</th><th>sin</th><th>cos</th><th>tan</th></tr>
+        <tr><td>0°</td><td>0</td><td>1</td><td>0</td></tr>
+        <tr><td>30°</td><td>0.5</td><td>√3/2</td><td>1/√3</td></tr>
+        <tr><td>45°</td><td>√2/2</td><td>√2/2</td><td>1</td></tr>
+        <tr><td>60°</td><td>√3/2</td><td>0.5</td><td>√3</td></tr>
+        <tr><td>90°</td><td>1</td><td>0</td><td>∞</td></tr>
+      </table>
+    </div>
+
+    <!-- 反三角函數 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 反三角函數
+        <button class="copy-btn" onclick="copyResult('atrig-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>函數</label>
+          <select id="atrig-fn">
+            <option value="asin">arcsin</option>
+            <option value="acos">arccos</option>
+            <option value="atan">arctan</option>
+            <option value="atan2">atan2(y,x)</option>
+          </select>
+        </div>
+        <div class="ig"><label>輸出單位</label>
+          <select id="atrig-unit"><option value="deg">度 (°)</option><option value="rad">弧度 (rad)</option></select>
+        </div>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>x 值 (或 atan2 的 y)</label><input type="number" id="atrig-x" value="0.707" step="any"></div>
+        <div class="ig"><label>x 值 (僅 atan2)</label><input type="number" id="atrig-y" value="1" step="any"></div>
+      </div>
+      <button class="btn btn-math" onclick="calcAtrig()">計算</button>
+      <div class="result-box math-res" id="atrig-result">點擊計算</div>
+      <div class="formula-hint">atan2(y,x): 四象限反正切 → (-180°,180°]<br>電路常用: 相位角 θ=atan2(X,R)</div>
+    </div>
+
+    <!-- 指數對數 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 指數 / 對數
+        <button class="copy-btn" onclick="copyResult('log-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>值 x</label><input type="number" id="log-x" value="100" step="any"></div>
+        <div class="ig"><label>底數 base</label><input type="number" id="log-base" value="10" step="any" min="0"></div>
+      </div>
+      <button class="btn btn-math" onclick="calcLog()">計算</button>
+      <div class="result-box math-res" id="log-result">點擊計算</div>
+      <div class="formula-hint">20·log₁₀(|V|/Vref) → 電壓 dB<br>10·log₁₀(P/Pref) → 功率 dB</div>
+    </div>
+
+    <!-- dB 換算 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 分貝 dB 換算
+        <button class="copy-btn" onclick="copyResult('db-result')">複製</button></div>
+      <div class="mode-strip" id="db-mode-strip">
+        <button class="mode-btn active" onclick="setDbMode('toDb')">→ dB</button>
+        <button class="mode-btn" onclick="setDbMode('fromDb')">dB →</button>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label id="db-label1">線性比值</label><input type="number" id="db-val" value="2" step="any"></div>
+        <div class="ig"><label>類型</label>
+          <select id="db-type">
+            <option value="power">功率 (10·log)</option>
+            <option value="voltage">電壓/電流 (20·log)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-math" onclick="calcDb()">換算</button>
+      <div class="result-box math-res" id="db-result">點擊計算</div>
+    </div>
+
+    <!-- 單位轉換 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 電工單位轉換
+        <button class="copy-btn" onclick="copyResult('unit-result')">複製</button></div>
+      <div class="ig"><label>數值</label><input type="number" id="unit-val" value="1000" step="any"></div>
+      <div class="ig2">
+        <div class="ig"><label>從</label>
+          <select id="unit-from">
+            <option value="1e-12">p (pico)</option>
+            <option value="1e-9">n (nano)</option>
+            <option value="1e-6">μ (micro)</option>
+            <option value="1e-3">m (milli)</option>
+            <option value="1" selected>基本單位</option>
+            <option value="1e3">k (kilo)</option>
+            <option value="1e6">M (Mega)</option>
+            <option value="1e9">G (Giga)</option>
+          </select>
+        </div>
+        <div class="ig"><label>到</label>
+          <select id="unit-to">
+            <option value="1e-12">p (pico)</option>
+            <option value="1e-9">n (nano)</option>
+            <option value="1e-6" selected>μ (micro)</option>
+            <option value="1e-3">m (milli)</option>
+            <option value="1">基本單位</option>
+            <option value="1e3">k (kilo)</option>
+            <option value="1e6">M (Mega)</option>
+            <option value="1e9">G (Giga)</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-math" onclick="calcUnit()">換算</button>
+      <div class="result-box math-res" id="unit-result">點擊計算</div>
+    </div>
+
+    <!-- 向量計算 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 二維向量計算
+        <button class="copy-btn" onclick="copyResult('vec-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>A_x</label><input type="number" id="vec-ax" value="3" step="any"></div>
+        <div class="ig"><label>A_y</label><input type="number" id="vec-ay" value="4" step="any"></div>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>B_x</label><input type="number" id="vec-bx" value="1" step="any"></div>
+        <div class="ig"><label>B_y</label><input type="number" id="vec-by" value="-2" step="any"></div>
+      </div>
+      <button class="btn btn-math" onclick="calcVector()">計算</button>
+      <div class="result-box math-res" id="vec-result">點擊計算</div>
+      <div class="formula-hint">A·B=AxBx+AyBy · A×B=AxBy−AyBx</div>
+    </div>
+
+    <!-- 微分積分 -->
+    <div class="card math-card">
+      <div class="card-title">◈ 數值微分 / 積分
+        <button class="copy-btn" onclick="copyResult('calc-result')">複製</button></div>
+      <div class="ig"><label>函數 f(x)</label><input type="text" id="calc-fn" value="x^2 + 2*x + 1" placeholder="sin(x), x^3, e^x ..."></div>
+      <div class="ig2">
+        <div class="ig"><label>微分點 x₀</label><input type="number" id="calc-x0" value="2" step="any"></div>
+        <div class="ig"><label>積分下界 a</label><input type="number" id="calc-a" value="0" step="any"></div>
+      </div>
+      <div class="ig"><label>積分上界 b</label><input type="number" id="calc-b" value="3" step="any"></div>
+      <button class="btn btn-math" onclick="calcCalculus()">微分 + 積分</button>
+      <div class="result-box math-res" id="calc-result">點擊計算</div>
+      <div class="formula-hint">微分: 中央差分 h=1e-6 · 積分: Simpson 1/3</div>
+    </div>
+
+    <!-- 數制轉換 (新增) -->
+    <div class="card math-card">
+      <div class="card-title">◈ 數制轉換 HEX/DEC/BIN/OCT
+        <button class="copy-btn" onclick="copyResult('radix-result')">複製</button></div>
+      <div class="mode-strip" id="radix-mode">
+        <button class="mode-btn active" onclick="setRadixInput('dec')">DEC</button>
+        <button class="mode-btn" onclick="setRadixInput('hex')">HEX</button>
+        <button class="mode-btn" onclick="setRadixInput('bin')">BIN</button>
+        <button class="mode-btn" onclick="setRadixInput('oct')">OCT</button>
+      </div>
+      <div class="ig"><label id="radix-input-label">十進制輸入</label><input type="text" id="radix-val" value="255" placeholder="輸入數值"></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin:8px 0 4px;">位元運算 (需先輸入兩個數)</div>
+      <div class="ig2">
+        <div class="ig"><label>值 B (十進制)</label><input type="number" id="radix-b" value="170" step="1" min="0"></div>
+        <div class="ig"><label>&nbsp;</label>
+          <button class="btn btn-math" style="margin-top:0" onclick="calcRadix()">轉換 + 位元運算</button>
+        </div>
+      </div>
+      <div class="result-box math-res" id="radix-result">點擊計算</div>
+      <div class="formula-hint">AND · OR · XOR · NOT · 左移/右移</div>
+    </div>
+
+    <!-- 線性插值 (新增) -->
+    <div class="card math-card">
+      <div class="card-title">◈ 線性插值 / 外插
+        <button class="copy-btn" onclick="copyResult('interp-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:8px;">已知兩點 (x₁,y₁) 和 (x₂,y₂)，求目標 x 對應的 y</div>
+      <div class="ig2">
+        <div class="ig"><label>x₁</label><input type="number" id="interp-x1" value="0" step="any"></div>
+        <div class="ig"><label>y₁</label><input type="number" id="interp-y1" value="0" step="any"></div>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>x₂</label><input type="number" id="interp-x2" value="100" step="any"></div>
+        <div class="ig"><label>y₂</label><input type="number" id="interp-y2" value="500" step="any"></div>
+      </div>
+      <div class="ig"><label>目標 x (求 y)</label><input type="number" id="interp-x" value="35" step="any"></div>
+      <button class="btn btn-math" onclick="calcInterp()">插值計算</button>
+      <div class="result-box math-res" id="interp-result">點擊計算</div>
+      <div class="formula-hint">y = y₁ + (x-x₁)·(y₂-y₁)/(x₂-x₁)<br>適用：感測器查表、電熱偶、電位計線性化</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ EXTRA (IC 元件工具) ══════════════ -->
+<div id="sec-extra" class="section-page">
+  <div class="sec-header">
+    <div class="sec-icon">⎔</div>
+    <div><div class="sec-title" style="color:var(--extra)">元件工具 COMPONENT TOOLS</div>
+    <div class="sec-sub">555 定時器 · RC 充放電 · LED 限流 · 齊納穩壓</div></div>
+  </div>
+  <div class="tool-grid">
+
+    <!-- 555 定時器 (新增) -->
+    <div class="card extra-card">
+      <div class="card-title">◈ 555 定時器計算器
+        <button class="copy-btn" onclick="copyResult('t555-result')">複製</button></div>
+      <div class="mode-strip" id="t555-mode">
+        <button class="mode-btn active" onclick="set555Mode('astable')">無穩態 Astable</button>
+        <button class="mode-btn" onclick="set555Mode('monostable')">單穩態 Monostable</button>
+      </div>
+      <div id="t555-astable">
+        <div class="ig2">
+          <div class="ig"><label>R₁ (kΩ)</label><input type="number" id="t5-r1" value="4.7" step="any" min="0.001"></div>
+          <div class="ig"><label>R₂ (kΩ)</label><input type="number" id="t5-r2" value="47" step="any" min="0.001"></div>
+        </div>
+        <div class="ig"><label>C (μF)</label><input type="number" id="t5-c" value="10" step="any" min="0.001"></div>
+      </div>
+      <div id="t555-mono" style="display:none">
+        <div class="ig2">
+          <div class="ig"><label>R (kΩ)</label><input type="number" id="t5-rm" value="100" step="any" min="0.001"></div>
+          <div class="ig"><label>C (μF)</label><input type="number" id="t5-cm" value="10" step="any" min="0.001"></div>
+        </div>
+      </div>
+      <button class="btn btn-extra" onclick="calc555()">計算</button>
+      <div class="result-box extra-res" id="t555-result">點擊計算</div>
+      <div id="t555-duty-wrap" style="display:none">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.63rem;color:var(--dim2);margin-top:8px;">佔空比 Duty Cycle</div>
+        <div class="duty-bar"><div class="duty-fill" id="t555-duty-fill" style="width:50%"></div></div>
+      </div>
+      <div class="formula-hint">
+        Astable: f=1.44/((R₁+2R₂)·C) · DC=(R₁+R₂)/(R₁+2R₂)<br>
+        Monostable: t=1.1·R·C
+      </div>
+    </div>
+
+    <!-- RC 充放電時間常數 (新增) -->
+    <div class="card extra-card">
+      <div class="card-title">◈ RC / RL 充放電分析
+        <button class="copy-btn" onclick="copyResult('rc-result')">複製</button></div>
+      <div class="mode-strip" id="rc-type-strip">
+        <button class="mode-btn active" onclick="setRcType('RC')">RC 電路</button>
+        <button class="mode-btn" onclick="setRcType('RL')">RL 電路</button>
+      </div>
+      <div class="ig3">
+        <div class="ig"><label>V_s (V)</label><input type="number" id="rc-vs" value="5" step="any"></div>
+        <div class="ig"><label id="rc-label2">C (μF)</label><input type="number" id="rc-c" value="100" step="any" min="0"></div>
+        <div class="ig"><label>R (Ω)</label><input type="number" id="rc-r" value="1000" step="any" min="0"></div>
+      </div>
+      <div class="ig"><label>目標時間 t (ms) — 求電壓</label><input type="number" id="rc-t" value="100" step="any" min="0"></div>
+      <button class="btn btn-extra" onclick="calcRC()">計算</button>
+      <div class="result-box extra-res" id="rc-result">點擊計算</div>
+      <div class="formula-hint">
+        RC充電: v(t)=Vs·(1-e^(-t/τ)) · τ=RC<br>
+        RC放電: v(t)=V₀·e^(-t/τ) · 5τ≈完全充/放電
+      </div>
+    </div>
+
+    <!-- LED 限流電阻計算 (新增) -->
+    <div class="card extra-card">
+      <div class="card-title">◈ LED 限流電阻計算
+        <button class="copy-btn" onclick="copyResult('led-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>電源電壓 Vs (V)</label><input type="number" id="led-vs" value="5" step="any" min="0"></div>
+        <div class="ig"><label>LED 順向電壓 Vf (V)</label><input type="number" id="led-vf" value="2.0" step="any" min="0">
+        </div>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>期望電流 If (mA)</label><input type="number" id="led-if" value="20" step="any" min="0"></div>
+        <div class="ig"><label>LED 顆數 (串聯)</label><input type="number" id="led-n" value="1" step="1" min="1"></div>
+      </div>
+      <button class="btn btn-extra" onclick="calcLED()">計算限流電阻</button>
+      <div class="result-box extra-res" id="led-result">點擊計算</div>
+      <div class="formula-hint">
+        R = (Vs − n·Vf) / If<br>
+        紅光≈2.0V · 綠/藍光≈3.0~3.4V · 白光≈3.2~3.6V
+      </div>
+    </div>
+
+    <!-- 齊納穩壓電路 (新增) -->
+    <div class="card extra-card">
+      <div class="card-title">◈ 齊納穩壓電路設計
+        <button class="copy-btn" onclick="copyResult('zener-result')">複製</button></div>
+      <div class="ig2">
+        <div class="ig"><label>輸入電壓 Vin (V)</label><input type="number" id="zn-vin" value="12" step="any" min="0"></div>
+        <div class="ig"><label>齊納電壓 Vz (V)</label><input type="number" id="zn-vz" value="5.1" step="any" min="0"></div>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>負載電流 IL (mA)</label><input type="number" id="zn-il" value="20" step="any" min="0"></div>
+        <div class="ig"><label>齊納最大 Pz (mW)</label><input type="number" id="zn-pz" value="500" step="any" min="0"></div>
+      </div>
+      <button class="btn btn-extra" onclick="calcZener()">計算設計參數</button>
+      <div class="result-box extra-res" id="zener-result">點擊計算</div>
+      <div class="formula-hint">
+        Rs=(Vin−Vz)/(IL+Iz_min)<br>
+        Iz_max=Pz/Vz · Rs 需滿足 Iz>Iz_min 才能穩壓
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ TWO-PORT NETWORK ══════════════ -->
+<div id="sec-tp" class="section-page">
+  <div class="sec-header">
+    <div class="sec-icon">⊞</div>
+    <div><div class="sec-title" style="color:var(--tp)">雙埠網路 TWO-PORT NETWORK</div>
+    <div class="sec-sub">Z 阻抗參數 · Y 導納參數 · H 混合參數 · T 傳輸參數 · 參數互換</div></div>
+  </div>
+
+  <!-- Two-port diagram -->
+  <div class="tp-diagram" style="margin-bottom:18px;">
+    <svg width="100%" viewBox="0 0 480 120" style="max-width:500px">
+      <!-- Box -->
+      <rect x="160" y="30" width="160" height="60" rx="6" fill="none" stroke="#f472b6" stroke-width="1.5" opacity=".7"/>
+      <text x="240" y="67" text-anchor="middle" fill="#f472b6" font-size="13" opacity=".9">雙埠網路</text>
+      <!-- Port 1 lines -->
+      <line x1="0" y1="45" x2="160" y2="45" stroke="#00ffb3" stroke-width="1.5"/>
+      <line x1="0" y1="75" x2="160" y2="75" stroke="#00ffb3" stroke-width="1.5"/>
+      <!-- Port 2 lines -->
+      <line x1="320" y1="45" x2="480" y2="45" stroke="#a78bfa" stroke-width="1.5"/>
+      <line x1="320" y1="75" x2="480" y2="75" stroke="#a78bfa" stroke-width="1.5"/>
+      <!-- Arrows -->
+      <polygon points="145,41 160,45 145,49" fill="#00ffb3" opacity=".8"/>
+      <polygon points="335,41 320,45 335,49" fill="#a78bfa" opacity=".8"/>
+      <!-- Labels -->
+      <text x="12" y="40" fill="#00ffb3" font-size="11">V₁</text>
+      <text x="12" y="82" fill="#00ffb3" font-size="11">I₁ →</text>
+      <text x="440" y="40" fill="#a78bfa" font-size="11">V₂</text>
+      <text x="425" y="82" fill="#a78bfa" font-size="11">← I₂</text>
+      <text x="75" y="15" fill="#4e6a8a" font-size="10" text-anchor="middle">埠 1 (Port 1)</text>
+      <text x="400" y="15" fill="#4e6a8a" font-size="10" text-anchor="middle">埠 2 (Port 2)</text>
+    </svg>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--dim2);margin-top:4px;">
+      所有參數均支援複數輸入（格式：a+bj 或純實數）
+    </div>
+  </div>
+
+  <div class="tool-grid">
+
+    <!-- Z Parameters -->
+    <div class="card tp-card">
+      <div class="card-title">◈ Z 阻抗參數 (Impedance)
+        <button class="copy-btn" onclick="copyResult('z-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.66rem;color:var(--dim2);margin-bottom:8px;line-height:1.7;">
+        [V₁]   [Z₁₁  Z₁₂] [I₁]<br>
+        [V₂] = [Z₂₁  Z₂₂] [I₂]
+      </div>
+      <div class="tp-input-grid">
+        <span class="tp-row-lbl"></span>
+        <label style="text-align:center">欄 1</label>
+        <label style="text-align:center">欄 2</label>
+        <span class="tp-row-lbl">列 1</span>
+        <input type="text" id="z11" value="10" placeholder="Z₁₁">
+        <input type="text" id="z12" value="4" placeholder="Z₁₂">
+        <span class="tp-row-lbl">列 2</span>
+        <input type="text" id="z21" value="4" placeholder="Z₂₁">
+        <input type="text" id="z22" value="20" placeholder="Z₂₂">
+      </div>
+      <div class="ig2" style="margin-top:6px">
+        <div class="ig"><label>I₁ (A)</label><input type="text" id="z-i1" value="1" placeholder="1 或 1+0j"></div>
+        <div class="ig"><label>I₂ (A)</label><input type="text" id="z-i2" value="0.5" placeholder="0.5"></div>
+      </div>
+      <button class="btn btn-tp" onclick="calcZ()">計算 Z 參數</button>
+      <div class="result-box tp-res" id="z-result">輸入 Z 矩陣與電流後計算</div>
+      <div class="formula-hint">V₁=Z₁₁I₁+Z₁₂I₂ · V₂=Z₂₁I₁+Z₂₂I₂<br>Z₁₁:輸入阻抗 · Z₁₂=Z₂₁:互阻抗(互易網路)</div>
+    </div>
+
+    <!-- Y Parameters -->
+    <div class="card tp-card">
+      <div class="card-title">◈ Y 導納參數 (Admittance)
+        <button class="copy-btn" onclick="copyResult('y-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.66rem;color:var(--dim2);margin-bottom:8px;line-height:1.7;">
+        [I₁]   [Y₁₁  Y₁₂] [V₁]<br>
+        [I₂] = [Y₂₁  Y₂₂] [V₂]
+      </div>
+      <div class="tp-input-grid">
+        <span class="tp-row-lbl"></span>
+        <label style="text-align:center">欄 1</label>
+        <label style="text-align:center">欄 2</label>
+        <span class="tp-row-lbl">列 1</span>
+        <input type="text" id="y11" value="0.15" placeholder="Y₁₁ (S)">
+        <input type="text" id="y12" value="-0.05" placeholder="Y₁₂ (S)">
+        <span class="tp-row-lbl">列 2</span>
+        <input type="text" id="y21" value="-0.05" placeholder="Y₂₁ (S)">
+        <input type="text" id="y22" value="0.1" placeholder="Y₂₂ (S)">
+      </div>
+      <div class="ig2" style="margin-top:6px">
+        <div class="ig"><label>V₁ (V)</label><input type="text" id="y-v1" value="10" placeholder="10"></div>
+        <div class="ig"><label>V₂ (V)</label><input type="text" id="y-v2" value="5" placeholder="5"></div>
+      </div>
+      <button class="btn btn-tp" onclick="calcY()">計算 Y 參數</button>
+      <div class="result-box tp-res" id="y-result">輸入 Y 矩陣與電壓後計算</div>
+      <div class="formula-hint">I₁=Y₁₁V₁+Y₁₂V₂ · I₂=Y₂₁V₁+Y₂₂V₂<br>Y=[Z]⁻¹ (Z與Y互為逆矩陣)</div>
+    </div>
+
+    <!-- H Parameters -->
+    <div class="card tp-card">
+      <div class="card-title">◈ H 混合參數 (Hybrid)
+        <button class="copy-btn" onclick="copyResult('h-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.66rem;color:var(--dim2);margin-bottom:8px;line-height:1.7;">
+        [V₁]   [h₁₁  h₁₂] [I₁]<br>
+        [I₂] = [h₂₁  h₂₂] [V₂]
+      </div>
+      <div class="tp-input-grid">
+        <span class="tp-row-lbl"></span>
+        <label style="text-align:center">欄 1</label>
+        <label style="text-align:center">欄 2</label>
+        <span class="tp-row-lbl">列 1</span>
+        <input type="text" id="h11" value="1000" placeholder="h₁₁ (Ω)">
+        <input type="text" id="h12" value="0.002" placeholder="h₁₂">
+        <span class="tp-row-lbl">列 2</span>
+        <input type="text" id="h21" value="50" placeholder="h₂₁">
+        <input type="text" id="h22" value="0.00002" placeholder="h₂₂ (S)">
+      </div>
+      <div class="ig2" style="margin-top:6px">
+        <div class="ig"><label>I₁ (A)</label><input type="text" id="h-i1" value="0.001" placeholder="I₁"></div>
+        <div class="ig"><label>V₂ (V)</label><input type="text" id="h-v2" value="5" placeholder="V₂"></div>
+      </div>
+      <button class="btn btn-tp" onclick="calcH()">計算 H 參數</button>
+      <div class="result-box tp-res" id="h-result">輸入 H 矩陣後計算</div>
+      <div class="formula-hint">V₁=h₁₁I₁+h₁₂V₂ · I₂=h₂₁I₁+h₂₂V₂<br>h₁₁:輸入阻抗 · h₁₂:反向電壓比<br>h₂₁:正向電流增益(β) · h₂₂:輸出導納</div>
+    </div>
+
+    <!-- T (ABCD) Parameters -->
+    <div class="card tp-card">
+      <div class="card-title">◈ T 傳輸參數 (ABCD)
+        <button class="copy-btn" onclick="copyResult('t-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.66rem;color:var(--dim2);margin-bottom:8px;line-height:1.7;">
+        [V₁]   [A  B] [ V₂]<br>
+        [I₁] = [C  D] [-I₂]
+      </div>
+      <div class="tp-input-grid">
+        <span class="tp-row-lbl"></span>
+        <label style="text-align:center">欄 1</label>
+        <label style="text-align:center">欄 2</label>
+        <span class="tp-row-lbl">列 1</span>
+        <input type="text" id="t-a" value="1" placeholder="A (無因次)">
+        <input type="text" id="t-b" value="50" placeholder="B (Ω)">
+        <span class="tp-row-lbl">列 2</span>
+        <input type="text" id="t-c" value="0.01" placeholder="C (S)">
+        <input type="text" id="t-d" value="1" placeholder="D (無因次)">
+      </div>
+      <div class="ig2" style="margin-top:6px">
+        <div class="ig"><label>V₂ (V)</label><input type="text" id="t-v2" value="10" placeholder="V₂"></div>
+        <div class="ig"><label>I₂ (A) (流出)</label><input type="text" id="t-i2" value="0.2" placeholder="I₂"></div>
+      </div>
+      <button class="btn btn-tp" onclick="calcT()">計算 T 參數</button>
+      <div class="result-box tp-res" id="t-result">輸入 ABCD 矩陣後計算</div>
+      <div class="formula-hint">V₁=AV₂-BI₂ · I₁=CV₂-DI₂<br>A:電壓比 · B:轉移阻抗 · C:轉移導納 · D:電流比<br>互易: AD−BC=1 · 對稱: A=D</div>
+    </div>
+
+    <!-- Parameter Conversion -->
+    <div class="card tp-card" style="grid-column:span 1">
+      <div class="card-title">◈ 參數互換轉換器
+        <button class="copy-btn" onclick="copyResult('conv-tp-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:10px;">輸入任一組參數，自動轉換為其他三組</div>
+      <div class="mode-strip" id="tp-from-strip">
+        <button class="mode-btn active" onclick="setTpFrom('Z')">Z → 其他</button>
+        <button class="mode-btn" onclick="setTpFrom('Y')">Y → 其他</button>
+        <button class="mode-btn" onclick="setTpFrom('H')">H → 其他</button>
+        <button class="mode-btn" onclick="setTpFrom('T')">T → 其他</button>
+      </div>
+      <div id="tp-conv-inputs">
+        <div class="tp-input-grid">
+          <span class="tp-row-lbl"></span>
+          <label style="text-align:center" id="tpc-col1">欄 1</label>
+          <label style="text-align:center" id="tpc-col2">欄 2</label>
+          <span class="tp-row-lbl" id="tpc-r1">列 1</span>
+          <input type="text" id="tpc-p11" value="10" placeholder="p₁₁">
+          <input type="text" id="tpc-p12" value="4" placeholder="p₁₂">
+          <span class="tp-row-lbl" id="tpc-r2">列 2</span>
+          <input type="text" id="tpc-p21" value="4" placeholder="p₂₁">
+          <input type="text" id="tpc-p22" value="20" placeholder="p₂₂">
+        </div>
+      </div>
+      <button class="btn btn-tp" onclick="calcTpConv()">轉換參數</button>
+      <div class="result-box tp-res" id="conv-tp-result">輸入參數後點擊轉換</div>
+    </div>
+
+    <!-- Two-port Cascade -->
+    <div class="card tp-card">
+      <div class="card-title">◈ 雙埠串接 (T矩陣相乘)
+        <button class="copy-btn" onclick="copyResult('casc-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:8px;">
+        網路A → 網路B 串接：[T_total] = [T_A] × [T_B]
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--tp);margin-bottom:6px;">網路 A (ABCD):</div>
+      <div class="tp-input-grid">
+        <span class="tp-row-lbl"></span><label style="text-align:center">欄1</label><label style="text-align:center">欄2</label>
+        <span class="tp-row-lbl">列1</span>
+        <input type="text" id="ca-a" value="1" placeholder="A"><input type="text" id="ca-b" value="50" placeholder="B">
+        <span class="tp-row-lbl">列2</span>
+        <input type="text" id="ca-c" value="0" placeholder="C"><input type="text" id="ca-d" value="1" placeholder="D">
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--tp);margin:8px 0 4px;">網路 B (ABCD):</div>
+      <div class="tp-input-grid">
+        <span class="tp-row-lbl"></span><label style="text-align:center">欄1</label><label style="text-align:center">欄2</label>
+        <span class="tp-row-lbl">列1</span>
+        <input type="text" id="cb-a" value="1" placeholder="A"><input type="text" id="cb-b" value="0" placeholder="B">
+        <span class="tp-row-lbl">列2</span>
+        <input type="text" id="cb-c" value="0.02" placeholder="C"><input type="text" id="cb-d" value="1" placeholder="D">
+      </div>
+      <button class="btn btn-tp" onclick="calcCascade()">計算串接 T 矩陣</button>
+      <div class="result-box tp-res" id="casc-result">點擊計算</div>
+      <div class="formula-hint">傳輸矩陣串接: T_total=T_A·T_B<br>適用：多級放大器、傳輸線、濾波器鏈</div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- content -->
+</div><!-- app-wrap -->
+
+<script>
+// ══════════════ NAVIGATION + localStorage ══════════════
+const LS = {
+  get(k, def) { try { const v=localStorage.getItem('cmv2_'+k); return v!==null?JSON.parse(v):def; } catch(e){return def;} },
+  set(k, v) { try { localStorage.setItem('cmv2_'+k, JSON.stringify(v)); } catch(e){} }
+};
+
+function showSection(sec) {
+  document.querySelectorAll('.section-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  const tabEl=document.querySelector('.'+sec+'-tab');
+  if(tabEl) tabEl.classList.add('active');
+  LS.set('sec', sec);
+}
+
+// ══════════════ UTILS ══════════════
+function smartF(n) {
+  if (!isFinite(n)) return n>0?'+∞':'−∞';
+  if (Math.abs(n)<1e-10) return '0';
+  const abs=Math.abs(n);
+  if (abs>=1e9) return (n/1e9).toFixed(3)+'G';
+  if (abs>=1e6) return (n/1e6).toFixed(3)+'M';
+  if (abs>=1e3) return (n/1e3).toFixed(3)+'k';
+  if (abs<1e-6) return (n*1e9).toFixed(3)+'n';
+  if (abs<1e-3) return (n*1e6).toFixed(3)+'μ';
+  if (abs<1)    return (n*1e3).toFixed(3)+'m';
+  return parseFloat(n.toFixed(4)).toString();
+}
+function F(n,d=4) {
+  if (!isFinite(n)) return n>0?'+∞':'−∞';
+  if (Math.abs(n)<1e-10) return '0';
+  if (Math.abs(n)>=1e6||(Math.abs(n)<0.0001&&n!==0)) return n.toExponential(3);
+  return parseFloat(n.toFixed(d)).toString();
+}
+function v(id) { return parseFloat(document.getElementById(id).value); }
+function t(id) { return document.getElementById(id).value.trim(); }
+function res(id, html) { document.getElementById(id).innerHTML = html; }
+function err(id, msg) { res(id, `<span class="err-text">❌ ${msg}</span>`); }
+function row(label, val, unit='') {
+  return `<div class="res-row"><span class="res-label">${label}</span><span class="res-val">${val}</span>${unit?` <span style="color:var(--dim2);font-size:.73rem">${unit}</span>`:''}</div>`;
+}
+
+// ── Toast ──
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+// ── Copy Result ──
+function copyResult(id) {
+  const el=document.getElementById(id);
+  if (!el) return;
+  const text=el.innerText.replace(/\n+/g,'\n').trim();
+  if (!text||text.length<2) { toast('⚠ 無內容可複製'); return; }
+  navigator.clipboard.writeText(text).then(()=>{
+    toast('✓ 已複製到剪貼簿');
+    const btn=el.parentElement?.querySelector('.copy-btn');
+    if(btn){btn.classList.add('copied');setTimeout(()=>btn.classList.remove('copied'),1500);}
+  }).catch(()=>toast('❌ 複製失敗'));
+}
+
+// ══════════════ COMPLEX CLASS (augmented) ══════════════
+class C {
+  constructor(re=0, im=0) { this.re=re; this.im=im; }
+  add(b){return new C(this.re+b.re,this.im+b.im);}
+  sub(b){return new C(this.re-b.re,this.im-b.im);}
+  mul(b){return new C(this.re*b.re-this.im*b.im,this.re*b.im+this.im*b.re);}
+  div(b){const d=b.re*b.re+b.im*b.im;if(d<1e-20)return new C(NaN,NaN);return new C((this.re*b.re+this.im*b.im)/d,(this.im*b.re-this.re*b.im)/d);}
+  mod(){return Math.sqrt(this.re*this.re+this.im*this.im);}
+  arg(){return Math.atan2(this.im,this.re);}
+  conj(){return new C(this.re,-this.im);}
+  inv(){return new C(1,0).div(this);}
+  // NEW: exp(a+bj) = e^a * (cos(b)+j*sin(b))
+  exp(){const ea=Math.exp(this.re);return new C(ea*Math.cos(this.im),ea*Math.sin(this.im));}
+  // NEW: pow(n) - integer/real power
+  pow(n){const mod=Math.pow(this.mod(),n),arg=this.arg()*n;return new C(mod*Math.cos(arg),mod*Math.sin(arg));}
+  // NEW: ln
+  ln(){return new C(Math.log(this.mod()),this.arg());}
+  sqrt(){return this.pow(0.5);}
+  toRect(){
+    const r=F(this.re),i=F(Math.abs(this.im));
+    if(Math.abs(this.im)<1e-9)return `${r}`;
+    if(Math.abs(this.re)<1e-9)return `${this.im<0?'-':''}${i}j`;
+    return `${r}${this.im>=0?'+':'-'}${i}j`;
+  }
+  toPolar(){return `${F(this.mod())}∠${F(this.arg()*180/Math.PI)}°`;}
+  static fromPolar(mod,deg){const r=deg*Math.PI/180;return new C(mod*Math.cos(r),mod*Math.sin(r));}
+  static parse(s){
+    s=s.replace(/\s/g,'').replace('−','-').replace('–','-');
+    if(/^[+-]?[\d.eE+-]+j$/.test(s))return new C(0,parseFloat(s));
+    const m=s.match(/^([+-]?[\d.eE+-]*?)([+-][\d.eE+]*?)j$/);
+    if(m){
+      const re=m[1]===''||m[1]==='+'?0:m[1]==='-'?0:parseFloat(m[1]);
+      const im=m[2]==='+'?1:m[2]==='-'?-1:parseFloat(m[2]);
+      return new C(isNaN(re)?0:re,isNaN(im)?0:im);
+    }
+    const n=parseFloat(s);
+    if(!isNaN(n))return new C(n,0);
+    return new C(NaN,NaN);
+  }
+}
+
+// ── mathjs Complex → C ──
+function mjToC(v){
+  if(typeof v==='number') return new C(v,0);
+  if(v&&typeof v==='object'&&'re' in v) return new C(v.re,v.im);
+  return new C(NaN,NaN);
+}
+
+// ══════════════ AC: COMPLEX CALC ══════════════
+let cmModeA='rect', cmModeB='rect';
+function cmMode(mode,which){
+  if(which==='A'){cmModeA=mode;document.getElementById('cm-rect-A').style.display=mode==='rect'?'':'none';document.getElementById('cm-polar-A').style.display=mode==='polar'?'':'none';document.getElementById('cma-rect-btn').classList.toggle('active',mode==='rect');document.getElementById('cma-polar-btn').classList.toggle('active',mode==='polar');}
+  else{cmModeB=mode;document.getElementById('cm-rect-B').style.display=mode==='rect'?'':'none';document.getElementById('cm-polar-B').style.display=mode==='polar'?'':'none';document.getElementById('cmb-rect-btn').classList.toggle('active',mode==='rect');document.getElementById('cmb-polar-btn').classList.toggle('active',mode==='polar');}
+}
+function getCM(which){
+  if(which==='A'){if(cmModeA==='rect')return new C(v('cm-a-re')||0,v('cm-a-im')||0);return C.fromPolar(v('cm-a-mod')||0,v('cm-a-ang')||0);}
+  else{if(cmModeB==='rect')return new C(v('cm-b-re')||0,v('cm-b-im')||0);return C.fromPolar(v('cm-b-mod')||0,v('cm-b-ang')||0);}
+}
+
+function cmEval(){
+  const expr=t('cm-expr');
+  if(!expr){err('cm-result','請輸入表達式');return;}
+  try{
+    // replace i with (0+1i) style for mathjs
+    const r=math.evaluate(expr.replace(/\bi\b/g,'i'));
+    const z=mjToC(r);
+    if(isNaN(z.re)||isNaN(z.im)){err('cm-result','計算結果無效');return;}
+    lastZ1=z; lastZR=z;
+    showCmResult('cm-result',z,`expr: ${expr}`);
+    drawPhasor();
+  }catch(e){err('cm-result','表達式錯誤: '+e.message);}
+}
+
+let lastZ1=new C(3,4),lastZ2=new C(1,-2),lastZR=new C(4,2);
+
+function showCmResult(id,z,expr=''){
+  res(id,
+    row('直角 Rectangular',z.toRect())+
+    row('極座標 Polar',z.toPolar())+
+    row('模 |Z|',F(z.mod()))+
+    row('共軛 Z*',z.conj().toRect())+
+    row('exp(Z)',z.exp().toRect())+
+    `${expr?`<div style="color:var(--dim2);font-size:.68rem;margin-top:5px">${expr}</div>`:''}`
+  );
+}
+
+function cmCalc(op){
+  const z1=getCM('A'),z2=getCM('B');
+  let zr;
+  if(op==='+'||op==='-'||op==='*'||op==='/'){
+    if(op==='+')zr=z1.add(z2);else if(op==='-')zr=z1.sub(z2);else if(op==='*')zr=z1.mul(z2);else zr=z1.div(z2);
+  }
+  lastZ1=z1;lastZ2=z2;lastZR=zr;
+  if(isNaN(zr.re)||isNaN(zr.im)){err('cm-result','除法分母為零');return;}
+  const ops={'+':'＋','-':'−','*':'×','/':'÷'};
+  showCmResult('cm-result',zr,`(${z1.toRect()}) ${ops[op]} (${z2.toRect()}) = ${zr.toRect()}`);
+  drawPhasor();
+}
+
+// Phasor
+function drawPhasor(){
+  const cvs=document.getElementById('phasor-canvas');
+  if(!cvs)return;
+  const W=cvs.parentElement.clientWidth-36;
+  cvs.width=W;cvs.height=Math.round(W*0.44);
+  const ctx=cvs.getContext('2d');
+  const W2=cvs.width,H=cvs.height,cx=W2/2,cy=H/2;
+  ctx.fillStyle='#07090f';ctx.fillRect(0,0,W2,H);
+  ctx.strokeStyle='rgba(28,41,64,.4)';ctx.lineWidth=.5;
+  for(let x=0;x<W2;x+=48){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=48){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W2,y);ctx.stroke();}
+  ctx.strokeStyle='rgba(0,255,179,.18)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W2,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();
+  ctx.font='10px Share Tech Mono';ctx.fillStyle='rgba(0,255,179,.28)';
+  ctx.fillText('Re',W2-22,cy-5);ctx.fillText('Im',cx+4,11);
+  const vecs=[lastZ1,lastZ2,lastZR];
+  const maxV=Math.max(...vecs.map(z=>Math.max(Math.abs(z.re),Math.abs(z.im))),0.5);
+  const S=(Math.min(cx,cy)-28)/maxV;
+  const tc=(re,im)=>({x:cx+re*S,y:cy-im*S});
+  function arrow(z,color,label){
+    const p=tc(z.re,z.im);
+    ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=8;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(p.x,p.y);ctx.stroke();
+    const ang=Math.atan2(cy-p.y,p.x-cx),hs=7;
+    ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-hs*Math.cos(ang-.4),p.y+hs*Math.sin(ang-.4));ctx.lineTo(p.x-hs*Math.cos(ang+.4),p.y+hs*Math.sin(ang+.4));ctx.closePath();ctx.fill();
+    ctx.shadowBlur=0;ctx.font='bold 11px Share Tech Mono';ctx.fillText(label,p.x+5,p.y-4);ctx.restore();
+  }
+  arrow(lastZ1,'#00ffb3','Z₁');arrow(lastZ2,'#a78bfa','Z₂');arrow(lastZR,'#ff9f1c','R');
+}
+cmCalc('+');
+
+// ══════════════ AC: CONV ══════════════
+function convRectToPolar(){
+  const s=t('conv-rect');const z=C.parse(s);
+  if(isNaN(z.re)||isNaN(z.im)){err('conv-result','格式錯誤，請用如 3+4j');return;}
+  res('conv-result',row('極座標',z.toPolar())+row('模 |Z|',F(z.mod()),'Ω')+row('相角 θ',F(z.arg()*180/Math.PI),'°')+row('弧度 θ',F(z.arg()),'rad'));
+}
+function convPolarToRect(){
+  let s=t('conv-polar').replace('∠',',');
+  const parts=s.split(',');if(parts.length<2){err('conv-result','格式錯誤');return;}
+  const mod=parseFloat(parts[0]),deg=parseFloat(parts[1]);
+  if(isNaN(mod)||isNaN(deg)){err('conv-result','數值解析錯誤');return;}
+  const z=C.fromPolar(mod,deg);
+  res('conv-result',row('直角',z.toRect())+row('實部 Re',F(z.re))+row('虛部 Im',F(z.im)));
+}
+
+// ══════════════ AC: IMPEDANCE (auto-scale) ══════════════
+let impMode='series';
+function setImpMode(m){
+  impMode=m;
+  document.querySelectorAll('#imp-mode .mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='series')||(i===1&&m==='parallel')));
+}
+function calcImpedance(){
+  const f=v('imp-f'),R=v('imp-r'),L=v('imp-l')/1000,Cap=v('imp-c')/1e6;
+  if([f,R,L,Cap].some(isNaN)||f<=0){err('imp-result','請輸入有效數值');return;}
+  const w=2*Math.PI*f;
+  const ZR=new C(R,0),ZL=new C(0,w*L),ZC=Cap>0?new C(0,-1/(w*Cap)):new C(0,0);
+  let Z;
+  if(impMode==='series'){Z=ZR.add(ZL).add(ZC);}
+  else{let inv=new C(0,0);if(R>0)inv=inv.add(ZR.inv());if(L>0)inv=inv.add(ZL.inv());if(Cap>0)inv=inv.add(ZC.inv());Z=inv.mod()>0?inv.inv():new C(0,0);}
+  res('imp-result',
+    row('Z',Z.toRect(),'Ω')+row('|Z| 自動縮放',smartF(Z.mod())+'Ω')+row('∠Z',F(Z.arg()*180/Math.PI),'°')+
+    row('X_L=ωL',smartF(w*L)+'Ω')+row('X_C=1/ωC',Cap>0?smartF(1/(w*Cap))+'Ω':'N/A')+row('ω',smartF(w)+'rad/s')
+  );
+}
+
+// ══════════════ AC: POWER ══════════════
+function calcPower(){
+  const Vrms=v('pwr-v'),Irms=v('pwr-i'),R=v('pwr-r'),X=v('pwr-x');
+  if([Vrms,Irms,R,X].some(isNaN)){err('pwr-result','請輸入有效數值');return;}
+  const Zmag=Math.sqrt(R*R+X*X),cosT=Zmag>0?R/Zmag:1,sinT=Zmag>0?X/Zmag:0;
+  const theta=Math.acos(Math.max(-1,Math.min(1,cosT)));
+  const S=Vrms*Irms,P=S*cosT,Q=S*sinT;
+  res('pwr-result',
+    row('視在功率 S',F(S),'VA')+row('實功率 P',F(P),'W')+row('虛功率 Q',F(Q),'VAR')+
+    row('功率因數 PF',F(cosT))+row('相位角 θ',F(theta*180/Math.PI),'°')+
+    `<div style="color:${X>0?'#38bdf8':X<0?'#f472b6':'#4ade80'};font-size:.72rem;margin-top:4px">${X>0?'▲ 感性負載 (lagging)':X<0?'▼ 容性負載 (leading)':'◆ 純電阻 (unity PF)'}</div>`
+  );
+}
+
+// ══════════════ AC: RESONANCE ══════════════
+function calcResonance(){
+  const L=v('res-l')/1000,Cap=v('res-c')/1e6,R=v('res-r');
+  if(L<=0||Cap<=0||R<0){err('res-result','請輸入有效正值');return;}
+  const w0=1/Math.sqrt(L*Cap),f0=w0/(2*Math.PI),Q=w0*L/R,BW=f0/Q;
+  res('res-result',
+    row('諧振頻率 f₀',smartF(f0)+'Hz')+row('角頻率 ω₀',smartF(w0)+'rad/s')+
+    row('品質因數 Q',F(Q))+row('頻寬 BW',smartF(BW)+'Hz')+
+    row('下截止 f₁',smartF(f0-BW/2)+'Hz')+row('上截止 f₂',smartF(f0+BW/2)+'Hz')
+  );
+}
+
+// ══════════════ AC: FILTER (新增) ══════════════
+let filterType='RC-LP';
+function setFilterType(t){
+  filterType=t;
+  const isRC=t.startsWith('RC');
+  document.getElementById('filter-rc').style.display=isRC?'':'none';
+  document.getElementById('filter-rl').style.display=isRC?'none':'';
+  document.querySelectorAll('#filter-type-strip .mode-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['RC-LP','RC-HP','RL-LP','RL-HP'][i]===t);
+  });
+}
+function calcFilter(){
+  let fc,tau,type=filterType;
+  if(type.startsWith('RC')){
+    const R=v('flt-r'),C=v('flt-c')/1e6;
+    if([R,C].some(n=>isNaN(n)||n<=0)){err('filter-result','請輸入有效正值');return;}
+    tau=R*C;fc=1/(2*Math.PI*R*C);
+  } else {
+    const R=v('flt-r2'),L=v('flt-l')/1000;
+    if([R,L].some(n=>isNaN(n)||n<=0)){err('filter-result','請輸入有效正值');return;}
+    tau=L/R;fc=R/(2*Math.PI*L);
+  }
+  const isLP=type.endsWith('LP');
+  res('filter-result',
+    row('截止頻率 fc',smartF(fc)+'Hz')+row('角截止頻率 ωc',smartF(2*Math.PI*fc)+'rad/s')+
+    row('時間常數 τ',smartF(tau)+'s')+
+    row('類型',isLP?'低通 (Low-Pass)':'高通 (High-Pass)')+
+    row('截止處增益','-3.01 dB (0.7071 倍)')+
+    row('Rolloff斜率',isLP?'-20 dB/decade':'+20 dB/decade')
+  );
+}
+
+// ══════════════ AC: BODE ══════════════
+let bodeCharts={mag:null,phase:null};
+function drawBode(){
+  const numExpr=t('bode-num')||'1',denExpr=t('bode-den')||'1';
+  const sp=v('bode-start'),ep=v('bode-end');
+  document.getElementById('bode-error').textContent='';
+  try{
+    const freqs=[],mags=[],phases=[];
+    for(let e=sp;e<=ep;e+=0.04){
+      const omega=Math.pow(10,e),s=math.complex(0,omega);
+      const num=math.evaluate(numExpr.replace(/s/g,`(${s})`));
+      const den=math.evaluate(denExpr.replace(/s/g,`(${s})`));
+      const H=math.divide(num,den);
+      freqs.push(omega);mags.push(20*Math.log10(math.abs(H)));phases.push(math.arg(H)*180/Math.PI);
+    }
+    const chartOpts=(title,yLabel,color)=>({
+      type:'line',data:{datasets:[{label:yLabel,borderColor:color,borderWidth:1.5,pointRadius:0,data:[]}]},
+      options:{animation:false,scales:{x:{type:'logarithmic',title:{display:true,text:'頻率 (rad/s)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.5)'}},y:{title:{display:true,text:yLabel,color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.5)'}}},plugins:{legend:{display:false},title:{display:true,text:title,color:color}}}
+    });
+    ['mag','phase'].forEach(id=>{if(bodeCharts[id])bodeCharts[id].destroy();});
+    const mCtx=document.getElementById('bode-mag').getContext('2d');
+    bodeCharts.mag=new Chart(mCtx,chartOpts('增益圖','增益 (dB)','#00ffb3'));
+    bodeCharts.mag.data.datasets[0].data=freqs.map((f,i)=>({x:f,y:mags[i]}));
+    bodeCharts.mag.update();
+    const pCtx=document.getElementById('bode-phase').getContext('2d');
+    bodeCharts.phase=new Chart(pCtx,chartOpts('相位圖','相位 (°)','#a78bfa'));
+    bodeCharts.phase.data.datasets[0].data=freqs.map((f,i)=>({x:f,y:phases[i]}));
+    bodeCharts.phase.update();
+  }catch(e){document.getElementById('bode-error').textContent='⚠ 錯誤: '+e.message;}
+}
+drawBode();
+
+// ══════════════ DC: OHM ══════════════
+function calcOhm(){
+  const fv=isNaN(v('ohm-v'))?null:v('ohm-v');
+  const fi=isNaN(v('ohm-i'))?null:v('ohm-i');
+  const fr=isNaN(v('ohm-r'))?null:v('ohm-r');
+  const fp=isNaN(v('ohm-p'))?null:v('ohm-p');
+  let rv=fv,ri=fi,rr=fr,rp=fp;
+  if(rv!==null&&ri!==null&&rr===null)rr=rv/ri;
+  if(rv!==null&&rr!==null&&ri===null)ri=rv/rr;
+  if(ri!==null&&rr!==null&&rv===null)rv=ri*rr;
+  if(fp!==null&&rv!==null&&ri===null)ri=fp/rv;
+  if(fp!==null&&ri!==null&&rv===null)rv=fp/ri;
+  if(fp!==null&&rr!==null&&ri===null)ri=Math.sqrt(fp/rr);
+  if(rv!==null&&ri!==null)rp=rv*ri;
+  if(rv===null||ri===null||rr===null||rp===null){err('ohm-result','需要至少兩個已知量');return;}
+  res('ohm-result',row('電壓 V',smartF(rv)+'V')+row('電流 I',smartF(ri)+'A')+row('電阻 R',smartF(rr)+'Ω')+row('功率 P',smartF(rp)+'W'));
+}
+
+// ══════════════ DC: DIVIDER ══════════════
+let divMode='voltage';
+function setDivMode(m){
+  divMode=m;
+  document.getElementById('div-voltage').style.display=m==='voltage'?'':'none';
+  document.getElementById('div-current').style.display=m==='current'?'':'none';
+  document.querySelectorAll('#div-mode-strip .mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='voltage')||(i===1&&m==='current')));
+}
+function calcDivider(){
+  if(divMode==='voltage'){
+    const Vs=v('dv-vs'),R1=v('dv-r1'),R2=v('dv-r2');
+    if([Vs,R1,R2].some(isNaN)||R1+R2===0){err('div-result','請輸入有效數值');return;}
+    const total=R1+R2;
+    res('div-result',row('R₁+R₂',smartF(total)+'Ω')+row('V₁ (R₁兩端)',smartF(Vs*R1/total)+'V')+row('V₂ (R₂兩端)',smartF(Vs*R2/total)+'V')+row('電流 I',smartF(Vs/total)+'A'));
+  }else{
+    const Is=v('dc-is'),R1=v('dc-r1'),R2=v('dc-r2');
+    if([Is,R1,R2].some(isNaN)||R1===0||R2===0){err('div-result','請輸入有效數值');return;}
+    res('div-result',row('I₁ (流過R₁)',smartF(Is*R2/(R1+R2))+'A')+row('I₂ (流過R₂)',smartF(Is*R1/(R1+R2))+'A')+row('並聯電壓',smartF(Is*R1*R2/(R1+R2))+'V'));
+  }
+}
+
+// ══════════════ DC: DELTA-Y ══════════════
+let dyMode='deltaY';
+function setDYMode(m){
+  dyMode=m;
+  document.getElementById('dy-delta').style.display=m==='deltaY'?'':'none';
+  document.getElementById('dy-y').style.display=m==='yDelta'?'':'none';
+  document.querySelectorAll('#dy-mode-strip .mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='deltaY')||(i===1&&m==='yDelta')));
+}
+function calcDeltaY(){
+  if(dyMode==='deltaY'){
+    const rab=v('dy-rab'),rbc=v('dy-rbc'),rca=v('dy-rca');
+    if([rab,rbc,rca].some(n=>isNaN(n)||n<0)){err('dy-result','請輸入有效正數');return;}
+    const sum=rab+rbc+rca;if(sum===0){err('dy-result','電阻不能全為零');return;}
+    res('dy-result',row('Ra',smartF(rab*rca/sum)+'Ω')+row('Rb',smartF(rab*rbc/sum)+'Ω')+row('Rc',smartF(rbc*rca/sum)+'Ω'));
+  }else{
+    const ra=v('dy-ra'),rb=v('dy-rb'),rc=v('dy-rc');
+    if([ra,rb,rc].some(n=>isNaN(n)||n<=0)){err('dy-result','請輸入有效正數(>0)');return;}
+    const prod=ra*rb+rb*rc+rc*ra;
+    res('dy-result',row('Rab',smartF(prod/rc)+'Ω')+row('Rbc',smartF(prod/ra)+'Ω')+row('Rca',smartF(prod/rb)+'Ω'));
+  }
+}
+
+// ══════════════ DC: RESISTORS + E-SERIES ══════════════
+// E-Series tables
+const ESERIES={
+  E12:[1.0,1.2,1.5,1.8,2.2,2.7,3.3,3.9,4.7,5.6,6.8,8.2],
+  E24:[1.0,1.1,1.2,1.3,1.5,1.6,1.8,2.0,2.2,2.4,2.7,3.0,3.3,3.6,3.9,4.3,4.7,5.1,5.6,6.2,6.8,7.5,8.2,9.1],
+  E48:[1.00,1.05,1.10,1.15,1.21,1.27,1.33,1.40,1.47,1.54,1.62,1.69,1.78,1.87,1.96,2.05,2.15,2.26,2.37,2.49,2.61,2.74,2.87,3.01,3.16,3.32,3.48,3.65,3.83,4.02,4.22,4.42,4.64,4.87,5.11,5.36,5.62,5.90,6.19,6.49,6.81,7.15,7.50,7.87,8.25,8.66,9.09,9.53],
+  E96:[1.00,1.02,1.05,1.07,1.10,1.13,1.15,1.18,1.21,1.24,1.27,1.30,1.33,1.37,1.40,1.43,1.47,1.50,1.54,1.58,1.62,1.65,1.69,1.74,1.78,1.82,1.87,1.91,1.96,2.00,2.05,2.10,2.15,2.21,2.26,2.32,2.37,2.43,2.49,2.55,2.61,2.67,2.74,2.80,2.87,2.94,3.01,3.09,3.16,3.24,3.32,3.40,3.48,3.57,3.65,3.74,3.83,3.92,4.02,4.12,4.22,4.32,4.42,4.53,4.64,4.75,4.87,4.99,5.11,5.23,5.36,5.49,5.62,5.76,5.90,6.04,6.19,6.34,6.49,6.65,6.81,6.98,7.15,7.32,7.50,7.68,7.87,8.06,8.25,8.45,8.66,8.87,9.09,9.31,9.53,9.76]
+};
+function findESeries(val,seriesName){
+  if(val<=0||seriesName==='none')return null;
+  const series=ESERIES[seriesName];if(!series)return null;
+  const decade=Math.pow(10,Math.floor(Math.log10(val)));
+  const norm=val/decade;
+  let best=null,bestErr=Infinity;
+  for(let mult=0.1;mult<=1000;mult*=10){
+    for(const s of series){
+      const candidate=s*mult;
+      const err=Math.abs(candidate-val)/val;
+      if(err<bestErr){bestErr=err;best=candidate;}
+    }
+  }
+  return best?{val:best,err:(bestErr*100).toFixed(2)}:null;
+}
+
+let resMode='series';
+function setResMode(m){resMode=m;document.querySelectorAll('#res-mode-strip .mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='series')||(i===1&&m==='parallel')));}
+function calcResistors(){
+  const vals=t('res-list').split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n)&&n>0);
+  if(vals.length<1){err('res-result','請輸入有效電阻值');return;}
+  let req;
+  if(resMode==='series')req=vals.reduce((a,b)=>a+b,0);
+  else req=1/vals.reduce((a,b)=>a+1/b,0);
+  const seriesName=document.getElementById('eseries-sel').value;
+  const match=findESeries(req,seriesName);
+  let html=row('電阻列表',vals.map(r=>smartF(r)+'Ω').join(' | '))+row('等效 R_eq',smartF(req)+'Ω')+row('精確值',F(req,6),'Ω');
+  if(match){
+    html+=`<div class="e-series-match"><span>${smartF(match.val)}Ω</span><small>${seriesName} 最近標稱值 · 誤差 ${match.err}%</small></div>`;
+  }
+  res('res-result',html);
+}
+
+// ══════════════ DC: TRANSFORMER (新增) ══════════════
+function calcTransformer(){
+  const N1=v('xfmr-n1'),N2=v('xfmr-n2'),V1=v('xfmr-v1'),ZL=v('xfmr-zl');
+  if([N1,N2,V1].some(isNaN)||N1<=0||N2<=0){err('xfmr-result','請輸入有效正值');return;}
+  const a=N1/N2,V2=V1/a,Zin=a*a*ZL;
+  const I1=isNaN(v('xfmr-i1'))?V1/Zin:v('xfmr-i1');
+  const I2=I1*a;
+  res('xfmr-result',
+    row('匝數比 a = N₁/N₂',F(a))+row('二次側電壓 V₂',smartF(V2)+'V')+
+    row('二次側電流 I₂',smartF(I2)+'A')+row('反射阻抗 Z_in',smartF(Zin)+'Ω')+
+    row('功率 (理想)',smartF(V1*I1)+'VA')
+  );
+}
+
+// ══════════════ DC: CRAMER 2x2 ══════════════
+function calcCramer2(){
+  const a1=v('cr2-a1'),b1=v('cr2-b1'),c1=v('cr2-c1'),a2=v('cr2-a2'),b2=v('cr2-b2'),c2=v('cr2-c2');
+  if([a1,b1,c1,a2,b2,c2].some(isNaN)){err('cr2-result','請輸入所有係數');return;}
+  const D=a1*b2-a2*b1;
+  if(Math.abs(D)<1e-12){err('cr2-result','行列式為零，無唯一解');return;}
+  res('cr2-result',row('行列式 D',F(D))+row('x',F((c1*b2-c2*b1)/D))+row('y',F((a1*c2-a2*c1)/D)));
+}
+
+// ══════════════ DC: CRAMER 3x3 ══════════════
+function det3(a){return a[0][0]*(a[1][1]*a[2][2]-a[1][2]*a[2][1])-a[0][1]*(a[1][0]*a[2][2]-a[1][2]*a[2][0])+a[0][2]*(a[1][0]*a[2][1]-a[1][1]*a[2][0]);}
+function calcCramer3(){
+  const g=id=>v(id);
+  const a=[[g('c3-a1'),g('c3-b1'),g('c3-c1')],[g('c3-a2'),g('c3-b2'),g('c3-c2')],[g('c3-a3'),g('c3-b3'),g('c3-c3')]];
+  const d=[g('c3-d1'),g('c3-d2'),g('c3-d3')];
+  if([...a.flat(),...d].some(isNaN)){err('cr3-result','請輸入所有係數');return;}
+  const D=det3(a);if(Math.abs(D)<1e-12){err('cr3-result','行列式為零');return;}
+  const Dx=det3([[d[0],a[0][1],a[0][2]],[d[1],a[1][1],a[1][2]],[d[2],a[2][1],a[2][2]]]);
+  const Dy=det3([[a[0][0],d[0],a[0][2]],[a[1][0],d[1],a[1][2]],[a[2][0],d[2],a[2][2]]]);
+  const Dz=det3([[a[0][0],a[0][1],d[0]],[a[1][0],a[1][1],d[1]],[a[2][0],a[2][1],d[2]]]);
+  res('cr3-result',row('D',F(D))+row('x=Dx/D',F(Dx/D))+row('y=Dy/D',F(Dy/D))+row('z=Dz/D',F(Dz/D)));
+}
+
+// ══════════════ MATH ══════════════
+function calcTrig(){
+  const val=v('trig-val'),unit=t('trig-unit');
+  if(isNaN(val)){err('trig-result','請輸入角度值');return;}
+  const rad=unit==='deg'?val*Math.PI/180:val,deg=unit==='deg'?val:val*180/Math.PI;
+  const s=Math.sin(rad),c=Math.cos(rad);
+  res('trig-result',
+    row('角度',F(deg)+'° = '+F(rad)+' rad')+row('sin(θ)',F(s))+row('cos(θ)',F(c))+
+    row('tan(θ)',Math.abs(c)>1e-10?F(s/c):'∞')+row('csc(θ)',Math.abs(s)>1e-10?F(1/s):'∞')+
+    row('sec(θ)',Math.abs(c)>1e-10?F(1/c):'∞')+row('cot(θ)',Math.abs(s)>1e-10?F(c/s):'∞')
+  );
+}
+function calcAtrig(){
+  const fn=t('atrig-fn'),x=v('atrig-x'),y=v('atrig-y'),unit=t('atrig-unit');
+  let rad,label;
+  if(fn==='asin'){if(x<-1||x>1){err('atrig-result','arcsin 需 [-1,1]');return;}rad=Math.asin(x);label=`arcsin(${F(x)})`;}
+  else if(fn==='acos'){if(x<-1||x>1){err('atrig-result','arccos 需 [-1,1]');return;}rad=Math.acos(x);label=`arccos(${F(x)})`;}
+  else if(fn==='atan'){rad=Math.atan(x);label=`arctan(${F(x)})`;}
+  else{if(isNaN(y)){err('atrig-result','atan2 需輸入 y 和 x');return;}rad=Math.atan2(x,y);label=`atan2(${F(x)},${F(y)})`;}
+  const deg=rad*180/Math.PI;
+  res('atrig-result',`<div class="res-row"><span class="res-label">${label}</span><span class="res-val">${unit==='deg'?F(deg)+'°':F(rad)+' rad'}</span></div>`+row('度數',F(deg),'°')+row('弧度',F(rad),'rad'));
+}
+function calcLog(){
+  const x=v('log-x'),base=v('log-base');
+  if(x<=0){err('log-result','x 必須>0');return;}
+  const ln=Math.log(x),log10=Math.log10(x),logB=(!isNaN(base)&&base>0&&base!==1)?Math.log(x)/Math.log(base):null;
+  res('log-result',row('ln(x)',F(ln))+row('log₁₀(x)',F(log10))+(logB!==null?row(`log_${F(base)}(x)`,F(logB)):'')+row('exp(x)',F(Math.exp(x)))+row('20·log₁₀(x)',F(20*log10),'dB'));
+}
+let dbMode='toDb';
+function setDbMode(m){dbMode=m;document.querySelectorAll('#db-mode-strip .mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='toDb')||(i===1&&m==='fromDb')));document.getElementById('db-label1').textContent=m==='toDb'?'線性比值':'dB 值';}
+function calcDb(){
+  const val=v('db-val'),type=t('db-type'),k=type==='power'?10:20;
+  if(isNaN(val)){err('db-result','請輸入數值');return;}
+  if(dbMode==='toDb'){if(val<=0){err('db-result','比值必須>0');return;}res('db-result',row('dB 值',F(k*Math.log10(val)),'dB')+row('公式',`${k}·log₁₀(${F(val)})`))}
+  else{res('db-result',row('線性比值',F(Math.pow(10,val/k)))+row('公式',`10^(${F(val)}/${k})`));}
+}
+function calcUnit(){
+  const val=v('unit-val'),from=parseFloat(t('unit-from')),to=parseFloat(t('unit-to'));
+  if(isNaN(val)){err('unit-result','請輸入數值');return;}
+  const result=val*from/to;
+  res('unit-result',row('換算結果',F(result,8))+row('縮放比例',`× ${(from/to).toExponential(3)}`));
+}
+function calcVector(){
+  const ax=v('vec-ax'),ay=v('vec-ay'),bx=v('vec-bx'),by=v('vec-by');
+  if([ax,ay,bx,by].some(isNaN)){err('vec-result','請輸入所有分量');return;}
+  const modA=Math.sqrt(ax*ax+ay*ay),modB=Math.sqrt(bx*bx+by*by);
+  const dot=ax*bx+ay*by,cross=ax*by-ay*bx;
+  const theta=modA>0&&modB>0?Math.acos(Math.max(-1,Math.min(1,dot/(modA*modB))))*180/Math.PI:0;
+  res('vec-result',row('|A|',F(modA))+row('|B|',F(modB))+row('A+B',`(${F(ax+bx)}, ${F(ay+by)})`)+row('A·B (點積)',F(dot))+row('A×B (叉積z)',F(cross))+row('夾角 θ',F(theta),'°'));
+}
+function calcCalculus(){
+  const fnStr=t('calc-fn'),x0=v('calc-x0'),a=v('calc-a'),b=v('calc-b');
+  if(!fnStr){err('calc-result','請輸入函數');return;}
+  if([x0,a,b].some(isNaN)){err('calc-result','請輸入有效數值');return;}
+  try{
+    const f=x=>math.evaluate(fnStr,{x});
+    const h=1e-6;const deriv=(f(x0+h)-f(x0-h))/(2*h);
+    const n=1000,dx=(b-a)/n;let integral=f(a)+f(b);
+    for(let i=1;i<n;i++)integral+=(i%2===0?2:4)*f(a+i*dx);
+    integral*=dx/3;
+    res('calc-result',row(`f'(${F(x0)})`,F(deriv))+row(`∫[${F(a)},${F(b)}]f(x)dx`,F(integral))+row('f(x₀)',F(f(x0))));
+  }catch(e){err('calc-result','函數錯誤: '+e.message);}
+}
+
+// ══════════════ MATH: 數制轉換 (新增) ══════════════
+let radixInputBase='dec';
+function setRadixInput(base){
+  radixInputBase=base;
+  const labels={dec:'十進制',hex:'十六進制 (0x)',bin:'二進制 (0b)',oct:'八進制 (0o)'};
+  document.getElementById('radix-input-label').textContent=labels[base]+'輸入';
+  document.querySelectorAll('#radix-mode .mode-btn').forEach((b,i)=>b.classList.toggle('active',['dec','hex','bin','oct'][i]===base));
+}
+function calcRadix(){
+  let raw=t('radix-val').replace(/^0[xXbBoO]/,'');
+  let n;
+  if(radixInputBase==='dec')n=parseInt(raw,10);
+  else if(radixInputBase==='hex')n=parseInt(raw,16);
+  else if(radixInputBase==='bin')n=parseInt(raw,2);
+  else n=parseInt(raw,8);
+  const b=Math.max(0,Math.floor(v('radix-b')));
+  if(isNaN(n)||n<0){err('radix-result','請輸入有效非負整數');return;}
+  const pad=s=>s.match(/.{1,4}/g)?.join(' ')||s;
+  res('radix-result',
+    `<div class="radix-display">`+
+    `<span class="radix-label">DEC</span><span class="radix-val">${n}</span>`+
+    `<span class="radix-label">HEX</span><span class="radix-val">0x${n.toString(16).toUpperCase()}</span>`+
+    `<span class="radix-label">BIN</span><span class="radix-val">${pad(n.toString(2))}</span>`+
+    `<span class="radix-label">OCT</span><span class="radix-val">0o${n.toString(8)}</span>`+
+    `</div>`+
+    `<div style="height:6px"></div>`+
+    row(`A AND B (${n}&${b})`,`${n&b} = 0x${(n&b).toString(16).toUpperCase()}`)+
+    row(`A OR B  (${n}|${b})`,`${n|b} = 0x${(n|b).toString(16).toUpperCase()}`)+
+    row(`A XOR B (${n}^${b})`,`${n^b} = 0x${(n^b).toString(16).toUpperCase()}`)+
+    row(`NOT A (~${n})`,`${~n} (32bit)`)+
+    row(`A << 1`,`${n<<1}`)+row(`A >> 1`,`${n>>1}`)
+  );
+}
+
+// ══════════════ MATH: 線性插值 (新增) ══════════════
+function calcInterp(){
+  const x1=v('interp-x1'),y1=v('interp-y1'),x2=v('interp-x2'),y2=v('interp-y2'),xt=v('interp-x');
+  if([x1,y1,x2,y2,xt].some(isNaN)){err('interp-result','請輸入所有數值');return;}
+  if(x1===x2){err('interp-result','x₁ 與 x₂ 不能相同');return;}
+  const y=y1+(xt-x1)*(y2-y1)/(x2-x1);
+  const isExtrapolated=xt<Math.min(x1,x2)||xt>Math.max(x1,x2);
+  res('interp-result',
+    row('插值結果 y',F(y))+row('斜率 (y₂-y₁)/(x₂-x₁)',F((y2-y1)/(x2-x1)))+
+    `<div style="color:${isExtrapolated?'#fb923c':'#4ade80'};font-size:.72rem;margin-top:4px">${isExtrapolated?'⚠ 外插 (x 超出範圍)':'✓ 內插'}</div>`
+  );
+}
+
+// ══════════════ EXTRA: 555 TIMER (新增) ══════════════
+let t555mode='astable';
+function set555Mode(m){
+  t555mode=m;
+  document.getElementById('t555-astable').style.display=m==='astable'?'':'none';
+  document.getElementById('t555-mono').style.display=m==='monostable'?'':'none';
+  document.querySelectorAll('#t555-mode .mode-btn').forEach((b,i)=>b.classList.toggle('active',(i===0&&m==='astable')||(i===1&&m==='monostable')));
+}
+function calc555(){
+  if(t555mode==='astable'){
+    const R1=v('t5-r1')*1e3,R2=v('t5-r2')*1e3,C=v('t5-c')/1e6;
+    if([R1,R2,C].some(n=>isNaN(n)||n<=0)){err('t555-result','請輸入有效正值');return;}
+    const f=1.44/((R1+2*R2)*C),T=1/f,tH=(R1+R2)*0.693*C,tL=R2*0.693*C,dc=(R1+R2)/(R1+2*R2);
+    res('t555-result',
+      row('頻率 f',smartF(f)+'Hz')+row('週期 T',smartF(T)+'s')+
+      row('高電位時間 t_H',smartF(tH)+'s')+row('低電位時間 t_L',smartF(tL)+'s')+
+      row('佔空比 DC',F(dc*100)+'%')
+    );
+    const dw=document.getElementById('t555-duty-wrap'),df=document.getElementById('t555-duty-fill');
+    dw.style.display='';df.style.width=(dc*100)+'%';
+  }else{
+    const R=v('t5-rm')*1e3,C=v('t5-cm')/1e6;
+    if([R,C].some(n=>isNaN(n)||n<=0)){err('t555-result','請輸入有效正值');return;}
+    const t=1.1*R*C;
+    res('t555-result',row('輸出脈衝寬度 t',smartF(t)+'s')+row('= ',F(t*1000),'ms')+row('τ = RC',smartF(R*C)+'s'));
+    document.getElementById('t555-duty-wrap').style.display='none';
+  }
+}
+
+// ══════════════ EXTRA: RC 充放電 (新增) ══════════════
+let rcType='RC';
+function setRcType(tp){
+  rcType=tp;
+  document.getElementById('rc-label2').textContent=tp==='RC'?'C (μF)':'L (mH)';
+  document.querySelectorAll('#rc-type-strip .mode-btn').forEach((b,i)=>b.classList.toggle('active',['RC','RL'][i]===tp));
+}
+function calcRC(){
+  const Vs=v('rc-vs'),C=v('rc-c'),R=v('rc-r'),tms=v('rc-t');
+  if([Vs,C,R,tms].some(isNaN)||C<=0||R<=0){err('rc-result','請輸入有效正值');return;}
+  const tau=rcType==='RC'?R*(C/1e6):((C/1000)/R);
+  const t=tms/1000;
+  const vCharge=Vs*(1-Math.exp(-t/tau)),vDischarge=Vs*Math.exp(-t/tau);
+  const t63=tau,t99=5*tau;
+  res('rc-result',
+    row('時間常數 τ',smartF(tau)+'s')+row('充電到 63%: t=τ',smartF(t63)+'s')+row('充電到 99%: t=5τ',smartF(t99)+'s')+
+    row(`充電 v(${F(tms)}ms)`,smartF(vCharge)+'V ('+F(vCharge/Vs*100,1)+'%)')+
+    row(`放電 v(${F(tms)}ms)`,smartF(vDischarge)+'V ('+F(vDischarge/Vs*100,1)+'%)')
+  );
+}
+
+// ══════════════ EXTRA: LED 限流 (新增) ══════════════
+function calcLED(){
+  const Vs=v('led-vs'),Vf=v('led-vf'),If=v('led-if')/1000,n=Math.max(1,Math.floor(v('led-n')));
+  if([Vs,Vf,If].some(isNaN)||If<=0){err('led-result','請輸入有效正值');return;}
+  const Vdrop=Vs-n*Vf;
+  if(Vdrop<=0){err('led-result','電源電壓不足以驅動此配置');return;}
+  const R=Vdrop/If,P=Vdrop*If;
+  const match=findESeries(R,'E24');
+  let html=row('壓降 V_drop',F(Vdrop),'V')+row('限流電阻 R',smartF(R)+'Ω')+row('電阻功耗',smartF(P)+'W')+row('建議規格',smartF(P*2)+'W 以上 (×2 安全余量)');
+  if(match)html+=`<div class="e-series-match"><span>${smartF(match.val)}Ω</span><small>E24 最近標稱值 · 誤差 ${match.err}%</small></div>`;
+  res('led-result',html);
+}
+
+// ══════════════ EXTRA: 齊納 (新增) ══════════════
+function calcZener(){
+  const Vin=v('zn-vin'),Vz=v('zn-vz'),IL=v('zn-il')/1000,Pz=v('zn-pz')/1000;
+  if([Vin,Vz,IL,Pz].some(isNaN)||Vin<=Vz){err('zener-result','Vin 必須大於 Vz');return;}
+  const Iz_max=Pz/Vz,Iz_min=IL*0.1; // 通常 Iz_min ≈ 10% IL
+  const Rs_max=(Vin-Vz)/(IL+Iz_min),Rs_min=(Vin-Vz)/(IL+Iz_max);
+  const Rs_rec=(Rs_max+Rs_min)/2;
+  const match=findESeries(Rs_rec,'E24');
+  let html=row('Iz_max (額定)',smartF(Iz_max*1000)+'mA')+row('建議 Rs',smartF(Rs_rec)+'Ω')+row('Rs 範圍',smartF(Rs_min)+'Ω ~ '+smartF(Rs_max)+'Ω')+row('穩壓輸出 Vout',F(Vz),'V');
+  if(match)html+=`<div class="e-series-match"><span>${smartF(match.val)}Ω</span><small>E24 最近標稱 Rs · 誤差 ${match.err}%</small></div>`;
+  res('zener-result',html);
+}
+
+// ══════════════ TWO-PORT NETWORK ══════════════
+
+// Complex 2×2 matrix operations
+function m2add(A,B){return[[A[0][0].add(B[0][0]),A[0][1].add(B[0][1])],[A[1][0].add(B[1][0]),A[1][1].add(B[1][1])]];}
+function m2mul(A,B){
+  return[
+    [A[0][0].mul(B[0][0]).add(A[0][1].mul(B[1][0])), A[0][0].mul(B[0][1]).add(A[0][1].mul(B[1][1]))],
+    [A[1][0].mul(B[0][0]).add(A[1][1].mul(B[1][0])), A[1][0].mul(B[0][1]).add(A[1][1].mul(B[1][1]))]
+  ];
+}
+function m2det(A){return A[0][0].mul(A[1][1]).sub(A[0][1].mul(A[1][0]));}
+function m2inv(A){
+  const det=m2det(A);
+  if(det.mod()<1e-12) return null;
+  return[[A[1][1].div(det), A[0][1].mul(new C(-1,0)).div(det)],
+         [A[1][0].mul(new C(-1,0)).div(det), A[0][0].div(det)]];
+}
+
+// Parse complex from input (supports a+bj or plain number)
+function parseC(id){
+  const s=document.getElementById(id).value.trim();
+  const z=C.parse(s.replace(/i$/,'j').replace(/\bi\b/g,'j'));
+  return (isNaN(z.re)||isNaN(z.im))?null:z;
+}
+
+// Render a 2×2 param matrix as HTML
+function renderM(label,m,units){
+  const u=units||['','','',''];
+  const fz=z=>{
+    if(!z) return '<span style="color:var(--err)">ERR</span>';
+    const rect=z.toRect(), polar=z.toPolar();
+    return `<span class="res-val">${rect}</span><br><span style="font-size:.68rem;color:var(--dim2)">${polar} ${u[0]}</span>`;
+  };
+  return `
+  <div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--tp);margin:8px 0 4px;">${label} 矩陣</div>
+  <div class="param-matrix">
+    <div class="param-cell"><span class="pc-label">[1,1]</span>${fz(m[0][0])}</div>
+    <div class="param-cell"><span class="pc-label">[1,2]</span>${fz(m[0][1])}</div>
+    <div class="param-cell"><span class="pc-label">[2,1]</span>${fz(m[1][0])}</div>
+    <div class="param-cell"><span class="pc-label">[2,2]</span>${fz(m[1][1])}</div>
+  </div>`;
+}
+
+function getM(ids){
+  const p=ids.map(id=>parseC(id));
+  if(p.some(x=>x===null)) return null;
+  return [[p[0],p[1]],[p[2],p[3]]];
+}
+
+// ── Z Parameters ──
+function calcZ(){
+  const Z=getM(['z11','z12','z21','z22']);
+  if(!Z){err('z-result','請確認所有 Z 參數格式正確');return;}
+  const I1=parseC('z-i1'),I2=parseC('z-i2');
+  if(!I1||!I2){err('z-result','請確認 I₁, I₂ 格式正確');return;}
+  const V1=Z[0][0].mul(I1).add(Z[0][1].mul(I2));
+  const V2=Z[1][0].mul(I1).add(Z[1][1].mul(I2));
+  const det=m2det(Z);
+  const isReciprocal=Z[0][1].sub(Z[1][0]).mod()<1e-9;
+  let html=renderM('Z',Z,['Ω','Ω','Ω','Ω']);
+  html+=row('det([Z])',det.toRect())+
+    row('V₁ = Z₁₁I₁+Z₁₂I₂',V1.toRect(),'V')+
+    row('V₂ = Z₂₁I₁+Z₂₂I₂',V2.toRect(),'V')+
+    `<div style="color:${isReciprocal?'var(--ok)':'var(--dc)'};font-size:.7rem;margin-top:5px">${isReciprocal?'✓ 互易網路 (Z₁₂=Z₂₁)':'✗ 非互易網路'}</div>`;
+  res('z-result',html);
+}
+
+// ── Y Parameters ──
+function calcY(){
+  const Y=getM(['y11','y12','y21','y22']);
+  if(!Y){err('y-result','請確認所有 Y 參數格式正確');return;}
+  const V1=parseC('y-v1'),V2=parseC('y-v2');
+  if(!V1||!V2){err('y-result','請確認 V₁, V₂ 格式正確');return;}
+  const I1=Y[0][0].mul(V1).add(Y[0][1].mul(V2));
+  const I2=Y[1][0].mul(V1).add(Y[1][1].mul(V2));
+  const det=m2det(Y);
+  const isReciprocal=Y[0][1].sub(Y[1][0]).mod()<1e-9;
+  let html=renderM('Y',Y,['S','S','S','S']);
+  html+=row('det([Y])',det.toRect())+
+    row('I₁ = Y₁₁V₁+Y₁₂V₂',I1.toRect(),'A')+
+    row('I₂ = Y₂₁V₁+Y₂₂V₂',I2.toRect(),'A')+
+    `<div style="color:${isReciprocal?'var(--ok)':'var(--dc)'};font-size:.7rem;margin-top:5px">${isReciprocal?'✓ 互易網路 (Y₁₂=Y₂₁)':'✗ 非互易網路'}</div>`;
+  // Z from Y
+  const Zinv=m2inv(Y);
+  if(Zinv) html+=renderM('Z (由 Y⁻¹ 推導)',Zinv,['Ω','Ω','Ω','Ω']);
+  res('y-result',html);
+}
+
+// ── H Parameters ──
+function calcH(){
+  const H=getM(['h11','h12','h21','h22']);
+  if(!H){err('h-result','請確認所有 H 參數格式正確');return;}
+  const I1=parseC('h-i1'),V2=parseC('h-v2');
+  if(!I1||!V2){err('h-result','請確認 I₁, V₂ 格式正確');return;}
+  const V1=H[0][0].mul(I1).add(H[0][1].mul(V2));
+  const I2=H[1][0].mul(I1).add(H[1][1].mul(V2));
+  const det=m2det(H);
+  const isReciprocal=H[0][1].add(H[1][0]).mod()<1e-9; // H₁₂+H₂₁=0 for reciprocal
+  let html=renderM('H',H,['','','','S']);
+  html+=row('det([H])',det.toRect())+
+    row('V₁ = h₁₁I₁+h₁₂V₂',V1.toRect(),'V')+
+    row('I₂ = h₂₁I₁+h₂₂V₂',I2.toRect(),'A')+
+    row('輸入阻抗 h₁₁',H[0][0].toRect(),'Ω')+
+    row('電流增益 h₂₁',H[1][0].toRect())+
+    `<div style="color:${isReciprocal?'var(--ok)':'var(--dc)'};font-size:.7rem;margin-top:5px">${isReciprocal?'✓ 互易網路 (h₁₂+h₂₁=0)':'✗ 非互易網路 (如電晶體)'}</div>`;
+  res('h-result',html);
+}
+
+// ── T (ABCD) Parameters ──
+function calcT(){
+  const A=parseC('t-a'),B=parseC('t-b'),Cv=parseC('t-c'),D=parseC('t-d');
+  if(!A||!B||!Cv||!D){err('t-result','請確認所有 ABCD 參數格式正確');return;}
+  const V2=parseC('t-v2'),I2=parseC('t-i2');
+  if(!V2||!I2){err('t-result','請確認 V₂, I₂ 格式正確');return;}
+  const negI2=I2.mul(new C(-1,0));
+  const V1=A.mul(V2).sub(B.mul(I2));
+  const I1=Cv.mul(V2).sub(D.mul(I2));
+  const T=[[A,B],[Cv,D]];
+  const det=m2det(T);
+  const isReciprocal=Math.abs(det.re-1)<1e-6&&Math.abs(det.im)<1e-6;
+  const isSymmetric=A.sub(D).mod()<1e-9;
+  let html=renderM('ABCD',T);
+  html+=row('det([T]) = AD−BC',det.toRect())+
+    row('V₁',V1.toRect(),'V')+
+    row('I₁',I1.toRect(),'A')+
+    `<div style="color:${isReciprocal?'var(--ok)':'var(--dc)'};font-size:.7rem;margin-top:4px">${isReciprocal?'✓ 互易 (AD−BC=1)':'✗ 非互易'}</div>`+
+    `<div style="color:${isSymmetric?'var(--ok)':'var(--dim2)'};font-size:.7rem">${isSymmetric?'✓ 對稱網路 (A=D)':'A≠D (不對稱)'}</div>`;
+  res('t-result',html);
+}
+
+// ── Parameter Conversion ──
+let tpFrom='Z';
+const tpLabels={
+  Z:{r1:'Z₁₁',r2:'Z₂₁',c1:'Z₁₂',c2:'Z₂₂',defaults:['10','4','4','20']},
+  Y:{r1:'Y₁₁',r2:'Y₂₁',c1:'Y₁₂',c2:'Y₂₂',defaults:['0.15','-0.05','-0.05','0.1']},
+  H:{r1:'h₁₁',r2:'h₂₁',c1:'h₁₂',c2:'h₂₂',defaults:['1000','50','0.002','0.00002']},
+  T:{r1:'A',r2:'C',c1:'B',c2:'D',defaults:['1','0.01','50','1']}
+};
+function setTpFrom(type){
+  tpFrom=type;
+  const lb=tpLabels[type];
+  document.getElementById('tpc-r1').textContent=lb.r1[0]+lb.r1.slice(1,2)+'₁';
+  document.getElementById('tpc-r2').textContent=lb.r2[0]+lb.r2.slice(1,2)+'₂';
+  document.getElementById('tpc-col1').textContent='欄 1';
+  document.getElementById('tpc-col2').textContent='欄 2';
+  document.getElementById('tpc-r1').textContent=lb.r1;
+  document.getElementById('tpc-r2').textContent=lb.r2;
+  document.getElementById('tpc-p11').placeholder=lb.r1;
+  document.getElementById('tpc-p12').placeholder=lb.c1;
+  document.getElementById('tpc-p21').placeholder=lb.r2;
+  document.getElementById('tpc-p22').placeholder=lb.c2;
+  // set default values
+  ['tpc-p11','tpc-p12','tpc-p21','tpc-p22'].forEach((id,i)=>{
+    document.getElementById(id).value=lb.defaults[i];
+  });
+  document.querySelectorAll('#tp-from-strip .mode-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['Z','Y','H','T'][i]===type);
+  });
+  res('conv-tp-result','輸入參數後點擊轉換');
+}
+
+// Core conversion functions (all complex-capable)
+function convZtoY(Z){return m2inv(Z);}
+function convZtoH(Z){
+  const d=Z[0][0];if(d.mod()<1e-14)return null;
+  const det=m2det(Z);
+  return[[Z[0][0].inv(), Z[0][1].mul(new C(-1,0)).div(Z[0][0])],
+         [Z[1][0].div(Z[0][0]), det.div(Z[0][0])]];
+}
+function convZtoT(Z){
+  const Z21=Z[1][0];if(Z21.mod()<1e-14)return null;
+  const det=m2det(Z);
+  return[[Z[0][0].div(Z21), det.div(Z21)],
+         [new C(1,0).div(Z21), Z[1][1].div(Z21)]];
+}
+function convYtoZ(Y){return m2inv(Y);}
+function convYtoH(Y){
+  const Y11=Y[0][0];if(Y11.mod()<1e-14)return null;
+  const det=m2det(Y);
+  return[[new C(1,0).div(Y11), Y[0][1].mul(new C(-1,0)).div(Y11)],
+         [Y[1][0].div(Y11), det.div(Y11)]];
+}
+function convYtoT(Y){
+  const Y21=Y[1][0];if(Y21.mod()<1e-14)return null;
+  const det=m2det(Y);
+  const neg=new C(-1,0);
+  return[[Y[1][1].mul(neg).div(Y21), new C(-1,0).div(Y21)],
+         [det.mul(neg).div(Y21), Y[0][0].mul(neg).div(Y21)]];
+}
+function convHtoZ(H){
+  const H22=H[1][1];if(H22.mod()<1e-14)return null;
+  const det=m2det(H);
+  return[[det.div(H22), H[0][1].div(H22)],
+         [H[1][0].mul(new C(-1,0)).div(H22), new C(1,0).div(H22)]];
+}
+function convHtoY(H){
+  const H11=H[0][0];if(H11.mod()<1e-14)return null;
+  const det=m2det(H);
+  return[[new C(1,0).div(H11), H[0][1].mul(new C(-1,0)).div(H11)],
+         [H[1][0].div(H11), det.div(H11)]];
+}
+function convHtoT(H){
+  const H21=H[1][0];if(H21.mod()<1e-14)return null;
+  const det=m2det(H);
+  const neg=new C(-1,0);
+  return[[H[0][1].mul(neg).sub(det.div(H21)), H[0][0].mul(neg).div(H21)],
+         [H[1][1].mul(neg).div(H21), new C(-1,0).div(H21)]];
+}
+function convTtoZ(T){
+  const C_=T[1][0];if(C_.mod()<1e-14)return null;
+  const det=m2det(T);
+  return[[T[0][0].div(T[1][0]), det.div(T[1][0])],
+         [new C(1,0).div(T[1][0]), T[1][1].div(T[1][0])]];
+}
+function convTtoY(T){
+  const B=T[0][1];if(B.mod()<1e-14)return null;
+  const det=m2det(T);
+  const neg=new C(-1,0);
+  return[[T[1][1].div(B), det.mul(neg).div(B)],
+         [new C(-1,0).div(B), T[0][0].div(B)]];
+}
+function convTtoH(T){
+  const C_=T[1][0];if(C_.mod()<1e-14)return null;
+  // H from T: h11=B/D, h12=(AD-BC)/D=det/D... actually standard conversion:
+  const D=T[1][1];if(D.mod()<1e-14)return null;
+  const det=m2det(T);
+  return[[T[0][1].div(D), det.div(D)],
+         [new C(-1,0).div(D), T[1][0].div(D)]];
+}
+
+function calcTpConv(){
+  const M=getM(['tpc-p11','tpc-p12','tpc-p21','tpc-p22']);
+  if(!M){err('conv-tp-result','請確認所有參數格式正確（支援複數 a+bj）');return;}
+  let Z,Y,H,T;
+  if(tpFrom==='Z'){Z=M;Y=convZtoY(M);H=convZtoH(M);T=convZtoT(M);}
+  else if(tpFrom==='Y'){Y=M;Z=convYtoZ(M);H=convYtoH(M);T=convYtoT(M);}
+  else if(tpFrom==='H'){H=M;Z=convHtoZ(M);Y=convHtoY(M);T=convHtoT(M);}
+  else{T=M;Z=convTtoZ(M);Y=convTtoY(M);H=convTtoH(M);}
+  let html='';
+  if(tpFrom!=='Z'&&Z) html+=renderM('Z 阻抗參數',Z,['Ω','Ω','Ω','Ω']);
+  else if(tpFrom!=='Z') html+=`<div class="formula-hint">Z 矩陣: 原始參數行列式為零，無法計算</div>`;
+  if(tpFrom!=='Y'&&Y) html+=renderM('Y 導納參數',Y,['S','S','S','S']);
+  else if(tpFrom!=='Y') html+=`<div class="formula-hint">Y 矩陣: 無法計算</div>`;
+  if(tpFrom!=='H'&&H) html+=renderM('H 混合參數',H,['Ω','','','S']);
+  else if(tpFrom!=='H') html+=`<div class="formula-hint">H 矩陣: 無法計算</div>`;
+  if(tpFrom!=='T'&&T) html+=renderM('T 傳輸參數 (ABCD)',T);
+  else if(tpFrom!=='T') html+=`<div class="formula-hint">T 矩陣: 無法計算</div>`;
+  res('conv-tp-result',html||'<span class="err-text">轉換失敗，請檢查輸入</span>');
+}
+
+// ── Cascade ──
+function calcCascade(){
+  const TA=getM(['ca-a','ca-b','ca-c','ca-d']);
+  const TB=getM(['cb-a','cb-b','cb-c','cb-d']);
+  if(!TA||!TB){err('casc-result','請確認所有 ABCD 參數格式正確');return;}
+  const TC=m2mul(TA,TB);
+  const detA=m2det(TA),detB=m2det(TB),detC=m2det(TC);
+  let html=renderM('T_total = T_A × T_B',TC);
+  html+=row('det(T_A)',detA.toRect())+row('det(T_B)',detB.toRect())+row('det(T_total)',detC.toRect());
+  const isRec=Math.abs(detC.re-1)<1e-5&&Math.abs(detC.im)<1e-5;
+  html+=`<div style="color:${isRec?'var(--ok)':'var(--dc)'};font-size:.7rem;margin-top:5px">${isRec?'✓ 互易串接 (det=1)':'det ≠ 1'}</div>`;
+  res('casc-result',html);
+}
+
+// Init Two-port
+setTpFrom('Z');
+
+// ══════════════ KEYBOARD + AUTO-SAVE ══════════════
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'&&e.key==='Enter'){
+    const card=e.target.closest('.card');
+    if(card){const btn=card.querySelector('.btn');if(btn)btn.click();}
+  }
+});
+
+// localStorage: auto-save all inputs on change
+document.addEventListener('input',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'){
+    if(e.target.id)LS.set('inp_'+e.target.id,e.target.value);
+  }
+});
+// restore on load
+window.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('input,select').forEach(el=>{
+    if(el.id){const saved=LS.get('inp_'+el.id,null);if(saved!==null)el.value=saved;}
+  });
+  const sec=LS.get('sec','ac');showSection(sec);
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(r => console.log('[SW] registered:', r.scope))
+      .catch(e => console.warn('[SW] failed:', e));
+  });
+}
+</script>
+</body>
+</html>

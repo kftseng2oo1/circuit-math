@@ -32,6 +32,8 @@
   --extra:   #38bdf8;
   --tp:      #f472b6;   /* Two-Port — pink */
   --gtp:     0 0 14px rgba(244,114,182,.4);
+  --bf:      #fb923c;   /* Bode/Filter — orange */
+  --gbf:     0 0 14px rgba(251,146,60,.4);
   --err:     #ff5f5f;
   --ok:      #4ade80;
   --text:    #b8d0e8;
@@ -65,12 +67,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .nav-tab.math-tab.active{color:var(--math);border-bottom-color:var(--math);text-shadow:var(--gmath);}
 .nav-tab.extra-tab.active{color:var(--extra);border-bottom-color:var(--extra);text-shadow:var(--gex);}
 .nav-tab.tp-tab.active{color:var(--tp);border-bottom-color:var(--tp);text-shadow:var(--gtp);}
+.nav-tab.bf-tab.active{color:var(--bf);border-bottom-color:var(--bf);text-shadow:var(--gbf);}
 .tab-badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:.58rem;margin-left:4px;vertical-align:middle;}
 .ac-badge{background:rgba(0,255,179,.15);color:var(--ac);}
 .dc-badge{background:rgba(255,159,28,.15);color:var(--dc);}
 .math-badge{background:rgba(167,139,250,.15);color:var(--math);}
 .extra-badge{background:rgba(56,189,248,.15);color:var(--extra);}
 .tp-badge{background:rgba(244,114,182,.15);color:var(--tp);}
+.bf-badge{background:rgba(251,146,60,.15);color:var(--bf);}
 
 /* ─── CONTENT ─── */
 .content{flex:1;}
@@ -92,6 +96,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .card.math-card::before{background:linear-gradient(90deg,transparent,var(--math),transparent);}
 .card.extra-card::before{background:linear-gradient(90deg,transparent,var(--extra),transparent);}
 .card.tp-card::before{background:linear-gradient(90deg,transparent,var(--tp),transparent);}
+.card.bf-card::before{background:linear-gradient(90deg,transparent,var(--bf),transparent);}
 .card-title{font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:2px;margin-bottom:13px;
   display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .ac-card .card-title{color:var(--ac);}
@@ -99,6 +104,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .math-card .card-title{color:var(--math);}
 .extra-card .card-title{color:var(--extra);}
 .tp-card .card-title{color:var(--tp);}
+.bf-card .card-title{color:var(--bf);}
 
 /* ─── COPY BUTTON ─── */
 .copy-btn{padding:3px 9px;font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:1px;
@@ -170,6 +176,29 @@ canvas{display:block;width:100%!important;border-radius:6px;border:1px solid var
 .math-card .mode-btn.active{border-color:var(--math);color:var(--math);}
 .extra-card .mode-btn.active{border-color:var(--extra);color:var(--extra);}
 .tp-card .mode-btn.active{border-color:var(--tp);color:var(--tp);}
+.bf-card .mode-btn.active{border-color:var(--bf);color:var(--bf);}
+
+/* ─── BODE/FILTER SPECIFIC ─── */
+.bf-card input:focus,.bf-card select:focus{border-color:var(--bf);box-shadow:var(--gbf);}
+.btn-bf{background:rgba(251,146,60,.1);color:var(--bf);border:1px solid rgba(251,146,60,.28);}
+.btn-bf:hover{background:rgba(251,146,60,.2);box-shadow:var(--gbf);transform:translateY(-1px);}
+.result-box.bf-res{border-left:3px solid var(--bf);}
+.freq-marker{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:4px;
+  background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.18);margin:3px 0;
+  font-family:'Share Tech Mono',monospace;font-size:.78rem;}
+.freq-marker .fm-label{color:var(--dim2);font-size:.65rem;min-width:80px;}
+.freq-marker .fm-val{color:#fff;}
+.freq-marker .fm-unit{color:var(--bf);font-size:.7rem;}
+.filter-resp-bar{height:6px;background:var(--border);border-radius:3px;margin:3px 0;overflow:hidden;}
+.filter-resp-fill{height:100%;border-radius:3px;transition:width .4s;}
+.pole-zero-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.bode-full{grid-column:1/-1;}
+.filter-tab-strip{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;}
+.filter-tab{padding:5px 10px;font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:1px;
+  background:var(--panel2);border:1px solid var(--border);border-radius:4px;color:var(--dim2);cursor:pointer;transition:all .18s;}
+.filter-tab.active{border-color:var(--bf);color:var(--bf);}
+.bode-crosshair{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--bf);
+  text-align:center;margin-top:4px;min-height:18px;}
 
 /* ─── TRIG TABLE ─── */
 .trig-table{width:100%;border-collapse:collapse;margin-top:8px;font-family:'Share Tech Mono',monospace;font-size:.75rem;}
@@ -233,6 +262,7 @@ canvas{display:block;width:100%!important;border-radius:6px;border:1px solid var
     <button class="nav-tab math-tab" onclick="showSection('math')">數學工具 <span class="tab-badge math-badge">∑</span></button>
     <button class="nav-tab extra-tab" onclick="showSection('extra')">元件工具 <span class="tab-badge extra-badge">IC</span></button>
     <button class="nav-tab tp-tab" onclick="showSection('tp')">雙埠網路 <span class="tab-badge tp-badge">2-P</span></button>
+    <button class="nav-tab bf-tab" onclick="showSection('bf')">波德圖&濾波器 <span class="tab-badge bf-badge">∿</span></button>
   </div>
 </nav>
 
@@ -1073,6 +1103,228 @@ canvas{display:block;width:100%!important;border-radius:6px;border:1px solid var
       <button class="btn btn-tp" onclick="calcCascade()">計算串接 T 矩陣</button>
       <div class="result-box tp-res" id="casc-result">點擊計算</div>
       <div class="formula-hint">傳輸矩陣串接: T_total=T_A·T_B<br>適用：多級放大器、傳輸線、濾波器鏈</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ BODE & FILTER ══════════════ -->
+<div id="sec-bf" class="section-page">
+  <div class="sec-header">
+    <div class="sec-icon">∿</div>
+    <div><div class="sec-title" style="color:var(--bf)">波德圖 &amp; 濾波器 BODE &amp; FILTER</div>
+    <div class="sec-sub">進階波德圖 · 一~四階濾波器設計 · 極零點 · 增益相位裕度 · 頻率響應比較</div></div>
+  </div>
+  <div class="tool-grid">
+
+    <!-- ◈ 進階波德圖 -->
+    <div class="card bf-card bode-full">
+      <div class="card-title">◈ 進階波德圖 (Advanced Bode Plot)
+        <button class="copy-btn" onclick="copyResult('bf-bode-info')">複製資訊</button></div>
+      <!-- Transfer function input -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:end;margin-bottom:10px;">
+        <div class="ig" style="margin:0"><label>分子 N(s)</label><input type="text" id="bf-num" value="1" placeholder="1 或 s+2"></div>
+        <div class="ig" style="margin:0"><label>分母 D(s)</label><input type="text" id="bf-den" value="s^2+0.5*s+1" placeholder="s^2+2s+1"></div>
+        <div class="ig" style="margin:0"><label>增益 K</label><input type="number" id="bf-gain" value="1" step="any"></div>
+        <div class="ig" style="margin:0"><label>頻率範圍 10^</label>
+          <div style="display:flex;gap:4px">
+            <input type="number" id="bf-fstart" value="-2" step="1" style="width:50%">
+            <input type="number" id="bf-fend" value="3" step="1" style="width:50%">
+          </div>
+        </div>
+      </div>
+      <!-- Predefined templates -->
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--dim2);margin-bottom:5px;">常用模板 →</div>
+      <div class="filter-tab-strip">
+        <button class="filter-tab" onclick="setBodeTemplate('lp1')">1階低通</button>
+        <button class="filter-tab" onclick="setBodeTemplate('hp1')">1階高通</button>
+        <button class="filter-tab" onclick="setBodeTemplate('lp2')">2階低通</button>
+        <button class="filter-tab" onclick="setBodeTemplate('bp2')">2階帶通</button>
+        <button class="filter-tab" onclick="setBodeTemplate('notch')">陷波</button>
+        <button class="filter-tab" onclick="setBodeTemplate('integrator')">積分器</button>
+        <button class="filter-tab" onclick="setBodeTemplate('lead')">超前補償</button>
+        <button class="filter-tab" onclick="setBodeTemplate('lag')">滯後補償</button>
+        <button class="filter-tab" onclick="setBodeTemplate('pid')">PID</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;">
+        <button class="btn btn-bf" style="flex:1;min-width:120px" onclick="drawAdvBode()">繪製波德圖</button>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:Share Tech Mono,monospace;font-size:.68rem;color:var(--dim2);">
+          <input type="checkbox" id="bf-show-asymp" style="width:auto"> 漸近線
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:Share Tech Mono,monospace;font-size:.68rem;color:var(--dim2);">
+          <input type="checkbox" id="bf-show-markers" checked style="width:auto"> 標記點
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-family:Share Tech Mono,monospace;font-size:.68rem;color:var(--dim2);">
+          <input type="checkbox" id="bf-hz" checked style="width:auto"> 用 Hz
+        </label>
+      </div>
+      <canvas id="bf-mag-canvas" height="200"></canvas>
+      <div class="bode-crosshair" id="bf-mag-info">游標移到圖上顯示數值</div>
+      <canvas id="bf-phase-canvas" height="150" style="margin-top:6px"></canvas>
+      <div class="bode-crosshair" id="bf-phase-info"></div>
+      <div id="bf-bode-info" class="result-box bf-res" style="margin-top:10px">點擊「繪製波德圖」顯示分析結果</div>
+    </div>
+
+    <!-- ◈ 穩定性分析 -->
+    <div class="card bf-card">
+      <div class="card-title">◈ 增益 &amp; 相位裕度分析
+        <button class="copy-btn" onclick="copyResult('bf-stab-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:8px">
+        使用上方波德圖的 N(s)/D(s) 自動計算，或手動輸入
+      </div>
+      <div class="ig"><label>分子 N(s)</label><input type="text" id="stab-num" value="1" placeholder="1"></div>
+      <div class="ig"><label>分母 D(s)</label><input type="text" id="stab-den" value="s*(s+1)*(s+2)" placeholder="s*(s+1)*(s+2)"></div>
+      <div class="ig"><label>開迴路增益 K</label><input type="number" id="stab-k" value="1" step="any"></div>
+      <button class="btn btn-bf" onclick="calcStability()">分析穩定裕度</button>
+      <div class="result-box bf-res" id="bf-stab-result">點擊計算</div>
+      <div class="formula-hint">
+        增益裕度 GM: 相位=-180°時的增益餘量<br>
+        相位裕度 PM: 增益=0dB時的相位餘量<br>
+        GM>0dB &amp; PM>0° → 穩定系統
+      </div>
+    </div>
+
+    <!-- ◈ 極零點分析 -->
+    <div class="card bf-card">
+      <div class="card-title">◈ 極點 &amp; 零點分析
+        <button class="copy-btn" onclick="copyResult('pz-result')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:8px">
+        輸入多項式係數（從最高次到常數項，逗號分隔）
+      </div>
+      <div class="ig"><label>分子多項式係數（零點）</label><input type="text" id="pz-num" value="1,3,2" placeholder="1,3,2 → s²+3s+2"></div>
+      <div class="ig"><label>分母多項式係數（極點）</label><input type="text" id="pz-den" value="1,2,5,0" placeholder="1,2,5,0 → s³+2s²+5s"></div>
+      <button class="btn btn-bf" onclick="calcPoleZero()">計算極零點</button>
+      <div class="result-box bf-res" id="pz-result">點擊計算</div>
+      <canvas id="pz-canvas" height="220" style="margin-top:8px"></canvas>
+      <div class="formula-hint">○ 零點 (Zeros) · × 極點 (Poles)<br>左半平面極點 → 穩定 · 右半平面 → 不穩定</div>
+    </div>
+
+    <!-- ◈ 一階濾波器（精強版） -->
+    <div class="card bf-card">
+      <div class="card-title">◈ 一階濾波器設計
+        <button class="copy-btn" onclick="copyResult('f1-result')">複製</button></div>
+      <div class="filter-tab-strip" id="f1-type-strip">
+        <button class="filter-tab active" onclick="setF1Type('RC-LP')">RC 低通</button>
+        <button class="filter-tab" onclick="setF1Type('RC-HP')">RC 高通</button>
+        <button class="filter-tab" onclick="setF1Type('RL-LP')">RL 低通</button>
+        <button class="filter-tab" onclick="setF1Type('RL-HP')">RL 高通</button>
+      </div>
+      <div id="f1-rc-inputs">
+        <div class="ig2">
+          <div class="ig"><label>R (Ω)</label><input type="number" id="f1-r" value="1000" step="any" min="0"></div>
+          <div class="ig"><label>C (μF)</label><input type="number" id="f1-c" value="0.159" step="any" min="0"></div>
+        </div>
+      </div>
+      <div id="f1-rl-inputs" style="display:none">
+        <div class="ig2">
+          <div class="ig"><label>R (Ω)</label><input type="number" id="f1-r2" value="100" step="any" min="0"></div>
+          <div class="ig"><label>L (mH)</label><input type="number" id="f1-l" value="15.9" step="any" min="0"></div>
+        </div>
+      </div>
+      <div class="ig"><label>目標頻率查詢 f (Hz)</label><input type="number" id="f1-fq" value="1000" step="any" min="0"></div>
+      <button class="btn btn-bf" onclick="calcF1()">計算 + 繪響應圖</button>
+      <div class="result-box bf-res" id="f1-result">點擊計算</div>
+      <canvas id="f1-canvas" height="160" style="margin-top:8px"></canvas>
+    </div>
+
+    <!-- ◈ 二階濾波器 -->
+    <div class="card bf-card">
+      <div class="card-title">◈ 二階濾波器設計
+        <button class="copy-btn" onclick="copyResult('f2-result')">複製</button></div>
+      <div class="filter-tab-strip" id="f2-type-strip">
+        <button class="filter-tab active" onclick="setF2Type('LP')">低通 LP</button>
+        <button class="filter-tab" onclick="setF2Type('HP')">高通 HP</button>
+        <button class="filter-tab" onclick="setF2Type('BP')">帶通 BP</button>
+        <button class="filter-tab" onclick="setF2Type('BS')">帶阻 BS</button>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>截止頻率 ω₀ (rad/s)</label><input type="number" id="f2-w0" value="1000" step="any" min="0"></div>
+        <div class="ig"><label>品質因數 Q</label><input type="number" id="f2-q" value="0.707" step="any" min="0.001"></div>
+      </div>
+      <div class="ig"><label>增益 K</label><input type="number" id="f2-k" value="1" step="any"></div>
+      <button class="btn btn-bf" onclick="calcF2()">計算 + 繪響應圖</button>
+      <div class="result-box bf-res" id="f2-result">點擊計算</div>
+      <canvas id="f2-canvas" height="160" style="margin-top:8px"></canvas>
+      <div class="formula-hint">
+        LP: H=K·ω₀²/(s²+ω₀/Q·s+ω₀²)<br>
+        HP: H=K·s²/(s²+ω₀/Q·s+ω₀²)<br>
+        BP: H=K·(ω₀/Q)·s/(s²+ω₀/Q·s+ω₀²)<br>
+        Q=1/√2≈0.707 (Butterworth 最平坦)
+      </div>
+    </div>
+
+    <!-- ◈ 巴特沃斯/切比雪夫濾波器 -->
+    <div class="card bf-card">
+      <div class="card-title">◈ 巴特沃斯 / 切比雪夫 設計
+        <button class="copy-btn" onclick="copyResult('bw-result')">複製</button></div>
+      <div class="filter-tab-strip" id="bw-type-strip">
+        <button class="filter-tab active" onclick="setBwType('butterworth')">Butterworth</button>
+        <button class="filter-tab" onclick="setBwType('chebyshev')">Chebyshev I</button>
+      </div>
+      <div class="ig2">
+        <div class="ig"><label>階數 n</label><input type="number" id="bw-n" value="3" min="1" max="8" step="1"></div>
+        <div class="ig"><label>截止頻率 fc (Hz)</label><input type="number" id="bw-fc" value="1000" step="any" min="0"></div>
+      </div>
+      <div id="bw-ripple-row" style="display:none">
+        <div class="ig"><label>通帶漣波 ε (dB)</label><input type="number" id="bw-ripple" value="1" step="any" min="0.01" max="3"></div>
+      </div>
+      <div class="filter-tab-strip" id="bw-resp-strip" style="margin-top:2px">
+        <button class="filter-tab active" onclick="setBwResp('LP')">低通</button>
+        <button class="filter-tab" onclick="setBwResp('HP')">高通</button>
+      </div>
+      <button class="btn btn-bf" onclick="calcBw()">設計濾波器</button>
+      <div class="result-box bf-res" id="bw-result">點擊計算</div>
+      <canvas id="bw-canvas" height="160" style="margin-top:8px"></canvas>
+      <div class="formula-hint">
+        Butterworth: 最平坦通帶 |H|²=1/(1+(ω/ωc)²ⁿ)<br>
+        Chebyshev I: 等漣波通帶，更陡峭過渡帶
+      </div>
+    </div>
+
+    <!-- ◈ 多濾波器響應比較 -->
+    <div class="card bf-card bode-full">
+      <div class="card-title">◈ 多濾波器頻率響應比較
+        <button class="copy-btn" onclick="copyResult('cmp-info')">複製</button></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--dim2);margin-bottom:10px">
+        最多同時比較 4 條頻率響應曲線
+      </div>
+      <div id="cmp-filters">
+        <div class="cmp-row" style="display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
+          <span style="font-family:Share Tech Mono,monospace;font-size:.68rem;color:#00ffb3">①</span>
+          <input type="text" id="cmp-num-1" value="1" placeholder="N(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-den-1" value="s+1" placeholder="D(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-label-1" value="一階LP" placeholder="標籤" style="font-size:.8rem;padding:6px">
+          <input type="color" id="cmp-color-1" value="#00ffb3" style="width:32px;height:32px;padding:1px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer">
+        </div>
+        <div class="cmp-row" style="display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
+          <span style="font-family:Share Tech Mono,monospace;font-size:.68rem;color:#a78bfa">②</span>
+          <input type="text" id="cmp-num-2" value="1" placeholder="N(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-den-2" value="s^2+1.414*s+1" placeholder="D(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-label-2" value="2階Butterworth" placeholder="標籤" style="font-size:.8rem;padding:6px">
+          <input type="color" id="cmp-color-2" value="#a78bfa" style="width:32px;height:32px;padding:1px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer">
+        </div>
+        <div class="cmp-row" style="display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
+          <span style="font-family:Share Tech Mono,monospace;font-size:.68rem;color:#fb923c">③</span>
+          <input type="text" id="cmp-num-3" value="1" placeholder="N(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-den-3" value="s^3+2*s^2+2*s+1" placeholder="D(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-label-3" value="3階Butterworth" placeholder="標籤" style="font-size:.8rem;padding:6px">
+          <input type="color" id="cmp-color-3" value="#fb923c" style="width:32px;height:32px;padding:1px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer">
+        </div>
+        <div class="cmp-row" style="display:grid;grid-template-columns:auto 1fr 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:6px;">
+          <span style="font-family:Share Tech Mono,monospace;font-size:.68rem;color:#f472b6">④</span>
+          <input type="text" id="cmp-num-4" value="" placeholder="N(s) (留空=不顯示)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-den-4" value="" placeholder="D(s)" style="font-size:.8rem;padding:6px">
+          <input type="text" id="cmp-label-4" value="" placeholder="標籤" style="font-size:.8rem;padding:6px">
+          <input type="color" id="cmp-color-4" value="#f472b6" style="width:32px;height:32px;padding:1px;border-radius:4px;border:1px solid var(--border);background:transparent;cursor:pointer">
+        </div>
+      </div>
+      <div class="ig2" style="margin-top:4px">
+        <div class="ig"><label>頻率起始 10^</label><input type="number" id="cmp-fstart" value="-2" step="1"></div>
+        <div class="ig"><label>頻率結束 10^</label><input type="number" id="cmp-fend" value="3" step="1"></div>
+      </div>
+      <button class="btn btn-bf" onclick="drawCompareBode()">比較頻率響應</button>
+      <canvas id="cmp-canvas" height="260" style="margin-top:8px"></canvas>
+      <div id="cmp-info" class="result-box bf-res" style="margin-top:8px">點擊繪製後顯示各曲線資訊</div>
     </div>
 
   </div>
@@ -1993,6 +2245,561 @@ function calcCascade(){
 
 // Init Two-port
 setTpFrom('Z');
+
+// ══════════════ BODE & FILTER ══════════════
+
+// ── Shared: evaluate H(jω) via mathjs ──
+function evalH(numExpr, denExpr, omega, gain=1) {
+  const s = math.complex(0, omega);
+  const sub = e => e.replace(/s/g, `(${s})`);
+  const num = math.multiply(gain, math.evaluate(sub(numExpr)));
+  const den = math.evaluate(sub(denExpr));
+  return math.divide(num, den);
+}
+
+function bodeData(numExpr, denExpr, fstart, fend, gain=1, useHz=true, step=0.04) {
+  const freqs=[], mags=[], phases=[];
+  for(let e=fstart; e<=fend; e+=step) {
+    const omega = Math.pow(10, e);
+    try {
+      const H = evalH(numExpr, denExpr, omega, gain);
+      const magDb = 20*Math.log10(math.abs(H));
+      const phDeg = math.arg(H)*180/Math.PI;
+      freqs.push(useHz ? omega/(2*Math.PI) : omega);
+      mags.push(isFinite(magDb)?magDb:-200);
+      phases.push(phDeg);
+    } catch(e) { /* skip */ }
+  }
+  return {freqs, mags, phases};
+}
+
+const bfChartOpts = (title, yLabel, color, bg='#07090f') => ({
+  type:'line',
+  data:{datasets:[{label:yLabel,borderColor:color,borderWidth:1.8,pointRadius:0,data:[]}]},
+  options:{
+    animation:false,
+    responsive:true,
+    scales:{
+      x:{type:'logarithmic',title:{display:true,text:'頻率',color:'#4e6a8a'},ticks:{color:'#4e6a8a',maxTicksLimit:8},grid:{color:'rgba(28,41,64,.5)'}},
+      y:{title:{display:true,text:yLabel,color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.5)'}}
+    },
+    plugins:{legend:{display:false},title:{display:true,text:title,color:color}},
+    interaction:{mode:'index',intersect:false}
+  }
+});
+
+// ── Advanced Bode Plot ──
+let advBodeCharts = {mag:null, phase:null};
+
+const BODE_TEMPLATES = {
+  'lp1':        {num:'1', den:'s+1', label:'1階低通 H=1/(s+1)'},
+  'hp1':        {num:'s', den:'s+1', label:'1階高通 H=s/(s+1)'},
+  'lp2':        {num:'1', den:'s^2+1.414*s+1', label:'2階LP Butterworth Q=0.707'},
+  'bp2':        {num:'1.414*s', den:'s^2+1.414*s+1', label:'2階帶通 Q=0.707'},
+  'notch':      {num:'s^2+1', den:'s^2+0.2*s+1', label:'陷波濾波器'},
+  'integrator': {num:'1', den:'s', label:'積分器 H=1/s'},
+  'lead':       {num:'s+10', den:'s+100', label:'超前補償'},
+  'lag':        {num:'s+1', den:'s+0.1', label:'滯後補償'},
+  'pid':        {num:'s^2+2*s+1', den:'s', label:'PID 控制器'},
+};
+
+function setBodeTemplate(key) {
+  const t = BODE_TEMPLATES[key];
+  if(!t) return;
+  document.getElementById('bf-num').value = t.num;
+  document.getElementById('bf-den').value = t.den;
+  document.getElementById('bf-gain').value = '1';
+  document.querySelectorAll('.filter-tab-strip .filter-tab').forEach(b=>{
+    b.classList.toggle('active', b.onclick?.toString().includes(`'${key}'`));
+  });
+  drawAdvBode();
+}
+
+function drawAdvBode() {
+  const numExpr = document.getElementById('bf-num').value.trim() || '1';
+  const denExpr = document.getElementById('bf-den').value.trim() || '1';
+  const gain    = parseFloat(document.getElementById('bf-gain').value) || 1;
+  const fstart  = parseFloat(document.getElementById('bf-fstart').value);
+  const fend    = parseFloat(document.getElementById('bf-fend').value);
+  const useHz   = document.getElementById('bf-hz').checked;
+  const showAsy = document.getElementById('bf-show-asymp').checked;
+  const showMrk = document.getElementById('bf-show-markers').checked;
+  document.getElementById('bf-bode-info').innerHTML = '計算中…';
+  try {
+    const {freqs, mags, phases} = bodeData(numExpr, denExpr, fstart, fend, gain, useHz);
+    const xLabel = useHz ? '頻率 (Hz)' : '頻率 (rad/s)';
+
+    // Destroy old charts
+    ['mag','phase'].forEach(k=>{ if(advBodeCharts[k]) advBodeCharts[k].destroy(); });
+
+    // Gain chart
+    const mCtx = document.getElementById('bf-mag-canvas').getContext('2d');
+    const datasets = [{label:'增益 (dB)',borderColor:'#fb923c',borderWidth:2,pointRadius:0,data:freqs.map((f,i)=>({x:f,y:mags[i]}))}];
+
+    // Asymptote overlay
+    if (showAsy) {
+      const asymMags = computeAsymptote(numExpr, denExpr, fstart, fend, gain, useHz);
+      if (asymMags) datasets.push({label:'漸近線',borderColor:'rgba(251,146,60,.35)',borderWidth:1,borderDash:[4,4],pointRadius:0,data:freqs.map((f,i)=>({x:f,y:asymMags[i]}))});
+    }
+
+    // -3dB marker line
+    const max_mag = Math.max(...mags.filter(isFinite));
+    const markers_y = max_mag - 3;
+
+    advBodeCharts.mag = new Chart(mCtx, {
+      type:'line',
+      data:{datasets},
+      options:{
+        animation:false,responsive:true,
+        scales:{
+          x:{type:'logarithmic',title:{display:true,text:xLabel,color:'#4e6a8a'},ticks:{color:'#4e6a8a',maxTicksLimit:10},grid:{color:'rgba(28,41,64,.4)'}},
+          y:{title:{display:true,text:'增益 (dB)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}}
+        },
+        plugins:{
+          legend:{display:showAsy,labels:{color:'#4e6a8a',font:{family:'Share Tech Mono',size:10}}},
+          title:{display:true,text:'增益 (Magnitude)',color:'#fb923c'},
+          annotation:showMrk?{annotations:{line1:{type:'line',yMin:markers_y,yMax:markers_y,borderColor:'rgba(251,146,60,.5)',borderWidth:1,borderDash:[6,3],label:{content:'-3dB',enabled:true,color:'#fb923c',font:{size:9}}}}}:{}
+        },
+        interaction:{mode:'index',intersect:false},
+        onHover:(evt,els)=>{
+          if(els.length>0){const i=els[0].index;document.getElementById('bf-mag-info').textContent=`f=${smartFHz(freqs[i],useHz)}  |H|=${F(mags[i],2)}dB`;}
+        }
+      }
+    });
+
+    // Phase chart
+    const pCtx = document.getElementById('bf-phase-canvas').getContext('2d');
+    advBodeCharts.phase = new Chart(pCtx, {
+      type:'line',
+      data:{datasets:[{label:'相位 (°)',borderColor:'#a78bfa',borderWidth:2,pointRadius:0,data:freqs.map((f,i)=>({x:f,y:phases[i]}))}]},
+      options:{
+        animation:false,responsive:true,
+        scales:{
+          x:{type:'logarithmic',title:{display:true,text:xLabel,color:'#4e6a8a'},ticks:{color:'#4e6a8a',maxTicksLimit:10},grid:{color:'rgba(28,41,64,.4)'}},
+          y:{title:{display:true,text:'相位 (°)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}}
+        },
+        plugins:{legend:{display:false},title:{display:true,text:'相位 (Phase)',color:'#a78bfa'}},
+        interaction:{mode:'index',intersect:false},
+        onHover:(evt,els)=>{
+          if(els.length>0){const i=els[0].index;document.getElementById('bf-phase-info').textContent=`f=${smartFHz(freqs[i],useHz)}  ∠H=${F(phases[i],2)}°`;}
+        }
+      }
+    });
+
+    // Analysis info
+    analyzeAndShowBodeInfo(freqs, mags, phases, useHz, numExpr, denExpr, gain);
+  } catch(e) {
+    document.getElementById('bf-bode-info').innerHTML=`<span class="err-text">⚠ 錯誤: ${e.message}</span>`;
+  }
+}
+
+function smartFHz(f, useHz) {
+  if(useHz) return smartF(f)+'Hz';
+  return smartF(f)+'rad/s';
+}
+
+function computeAsymptote(numExpr, denExpr, fstart, fend, gain, useHz) {
+  // Straight-line Bode approximation: find DC gain, then +/-20dB steps at break freqs
+  // Simple: evaluate at 5x density then round to nearest 20dB/dec
+  try {
+    const step=0.2, pts=[];
+    for(let e=fstart;e<=fend;e+=step){
+      const omega=Math.pow(10,e);
+      const H=evalH(numExpr,denExpr,omega,gain);
+      const mag=20*Math.log10(math.abs(H));
+      pts.push(isFinite(mag)?Math.round(mag/20)*20:-200);
+    }
+    return pts;
+  } catch(e){return null;}
+}
+
+function analyzeAndShowBodeInfo(freqs, mags, phases, useHz, numExpr, denExpr, gain) {
+  const maxMag = Math.max(...mags.filter(isFinite));
+  const minMag = Math.min(...mags.filter(isFinite));
+  // -3dB frequency
+  const thresh3 = maxMag - 3;
+  let f3dB = null;
+  for(let i=1;i<mags.length;i++){if((mags[i-1]-thresh3)*(mags[i]-thresh3)<0){f3dB=freqs[i];break;}}
+  // 0dB crossing (gain crossover)
+  let fgc=null, phaseAtGc=null;
+  for(let i=1;i<mags.length;i++){if(mags[i-1]*mags[i]<=0){fgc=freqs[i];phaseAtGc=phases[i];break;}}
+  // -180° crossing (phase crossover)
+  let fpc=null, magAtPc=null;
+  for(let i=1;i<phases.length;i++){if((phases[i-1]+180)*(phases[i]+180)<=0){fpc=freqs[i];magAtPc=mags[i];break;}}
+  const PM = phaseAtGc!==null ? phaseAtGc+180 : null;
+  const GM = magAtPc!==null ? -magAtPc : null;
+  const stable = (GM===null||GM>0) && (PM===null||PM>0);
+
+  let html = '';
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">`;
+  html += `<div class="freq-marker"><span class="fm-label">峰值增益</span><span class="fm-val">${F(maxMag,2)}</span><span class="fm-unit">dB</span></div>`;
+  html += `<div class="freq-marker"><span class="fm-label">最低增益</span><span class="fm-val">${F(minMag,2)}</span><span class="fm-unit">dB</span></div>`;
+  if(f3dB) html+=`<div class="freq-marker"><span class="fm-label">-3dB 頻率</span><span class="fm-val">${smartFHz(f3dB,useHz)}</span></div>`;
+  if(fgc)  html+=`<div class="freq-marker"><span class="fm-label">增益交越頻率</span><span class="fm-val">${smartFHz(fgc,useHz)}</span></div>`;
+  if(PM!==null) html+=`<div class="freq-marker" style="border-color:${PM>30?'rgba(74,222,128,.3)':PM>0?'rgba(251,146,60,.3)':'rgba(255,95,95,.3)'}"><span class="fm-label">相位裕度 PM</span><span class="fm-val" style="color:${PM>30?'var(--ok)':PM>0?'var(--bf)':'var(--err)'}">${F(PM,2)}°</span></div>`;
+  if(GM!==null) html+=`<div class="freq-marker" style="border-color:${GM>6?'rgba(74,222,128,.3)':GM>0?'rgba(251,146,60,.3)':'rgba(255,95,95,.3)'}"><span class="fm-label">增益裕度 GM</span><span class="fm-val" style="color:${GM>6?'var(--ok)':GM>0?'var(--bf)':'var(--err)'}">${F(GM,2)}dB</span></div>`;
+  html += '</div>';
+  if(fgc||fpc) html+=`<div style="color:${stable?'var(--ok)':'var(--err)'};font-family:Share Tech Mono,monospace;font-size:.75rem;padding:6px 8px;background:rgba(0,0,0,.2);border-radius:4px">${stable?'✓ 系統穩定 (GM>0, PM>0)':'⚠ 系統可能不穩定'}</div>`;
+  document.getElementById('bf-bode-info').innerHTML = html;
+}
+
+// ── Stability Analysis ──
+function calcStability() {
+  const numExpr = document.getElementById('stab-num').value.trim() || '1';
+  const denExpr = document.getElementById('stab-den').value.trim() || 's';
+  const K = parseFloat(document.getElementById('stab-k').value) || 1;
+  try {
+    const {freqs, mags, phases} = bodeData(numExpr, denExpr, -3, 4, K, false);
+    let fgc=null,phGc=null,fpc=null,magPc=null;
+    for(let i=1;i<mags.length;i++){
+      if(fgc===null&&mags[i-1]*mags[i]<=0){fgc=freqs[i];phGc=phases[i];}
+      if(fpc===null&&(phases[i-1]+180)*(phases[i]+180)<=0){fpc=freqs[i];magPc=mags[i];}
+    }
+    const PM=phGc!==null?phGc+180:null;
+    const GM=magPc!==null?-magPc:null;
+    const dcGain=20*Math.log10(math.abs(evalH(numExpr,denExpr,0.001,K)));
+    let html='';
+    html+=row('DC增益 (ω→0)',F(dcGain,2),'dB');
+    if(fgc) html+=row('增益交越頻率 ωgc',smartF(fgc),'rad/s');
+    if(PM!==null) html+=`<div class="freq-marker" style="margin:4px 0;border-color:${PM>30?'rgba(74,222,128,.3)':PM>0?'rgba(251,146,60,.3)':'rgba(255,95,95,.3)'}"><span class="fm-label">相位裕度 PM</span><span class="fm-val" style="color:${PM>30?'var(--ok)':PM>0?'var(--bf)':'var(--err)'}">${F(PM,2)}°</span><span class="fm-unit">${PM>45?'✓ 優':PM>20?'⚠ 尚可':'✗ 不足'}</span></div>`;
+    if(fpc) html+=row('相位交越頻率 ωpc',smartF(fpc),'rad/s');
+    if(GM!==null) html+=`<div class="freq-marker" style="margin:4px 0;border-color:${GM>6?'rgba(74,222,128,.3)':GM>0?'rgba(251,146,60,.3)':'rgba(255,95,95,.3)'}"><span class="fm-label">增益裕度 GM</span><span class="fm-val" style="color:${GM>6?'var(--ok)':GM>0?'var(--bf)':'var(--err)'}">${F(GM,2)}dB</span><span class="fm-unit">${GM>6?'✓ 穩定':GM>0?'⚠ 邊界':'✗ 不穩'}</span></div>`;
+    if(PM===null&&GM===null) html+=`<div class="res-row"><span class="res-label">注意</span><span class="res-val">無增益/相位交越頻率，請擴大頻率範圍</span></div>`;
+    html+=`<div style="color:${(PM===null||PM>0)&&(GM===null||GM>0)?'var(--ok)':'var(--err)'};font-size:.72rem;margin-top:6px">${(PM===null||PM>0)&&(GM===null||GM>0)?'✓ Nyquist 準則：系統穩定':'⚠ 系統不穩定，需補償'}</div>`;
+    res('bf-stab-result', html);
+  } catch(e) { err('bf-stab-result','計算錯誤: '+e.message); }
+}
+
+// ── Pole-Zero Analysis ──
+let pzChart = null;
+function calcPoleZero() {
+  const numCoeffs = document.getElementById('pz-num').value.split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n));
+  const denCoeffs = document.getElementById('pz-den').value.split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n));
+  if(numCoeffs.length<1||denCoeffs.length<1){err('pz-result','請輸入有效係數');return;}
+
+  function compRoots(c) {
+    // Companion matrix eigenvalue method via companion matrix (simplified for ≤4th order)
+    const n=c.length-1;
+    if(n<=0) return [];
+    if(n===1) return [{re:-c[1]/c[0],im:0}];
+    if(n===2){
+      const a=c[0],b=c[1],cv=c[2];
+      const disc=b*b-4*a*cv;
+      if(disc>=0) return [{re:(-b+Math.sqrt(disc))/(2*a),im:0},{re:(-b-Math.sqrt(disc))/(2*a),im:0}];
+      const r=-b/(2*a),i=Math.sqrt(-disc)/(2*a);
+      return [{re:r,im:i},{re:r,im:-i}];
+    }
+    if(n===3){
+      const [a0,a1,a2,a3]=c.map((x,i)=>x/c[0]);
+      // Cardano for cubic a3 + a2*s^2 + a1*s + a0 (after dividing by lead)
+      const b2=a1,b1=a2,b0=a3; // coeffs of monic s^3+b1*s^2+b2*s+b0 — actually redo
+      const p=a2-a1*a1/3, q=2*a1*a1*a1/27-a1*a2/3+a3;
+      const D=q*q/4+p*p*p/27;
+      const roots=[];
+      const shift=-a1/3;
+      if(D>0){
+        const sqD=Math.sqrt(D);
+        const u=Math.cbrt(-q/2+sqD),vv=Math.cbrt(-q/2-sqD);
+        roots.push({re:u+vv+shift,im:0});
+        roots.push({re:-(u+vv)/2+shift,im:(u-vv)*Math.sqrt(3)/2});
+        roots.push({re:-(u+vv)/2+shift,im:-(u-vv)*Math.sqrt(3)/2});
+      } else {
+        const r=2*Math.sqrt(-p/3);
+        const theta=Math.acos(3*q/(p*r));
+        for(let k=0;k<3;k++) roots.push({re:r*Math.cos((theta-2*Math.PI*k)/3)+shift,im:0});
+      }
+      return roots;
+    }
+    // For 4th order: use companion matrix numerical approach
+    return numericalRoots(c);
+  }
+
+  function numericalRoots(c) {
+    // Normalize
+    const n=c.length-1; const lead=c[0];
+    const norm=c.map(x=>x/lead);
+    // Weierstrass/Durand-Kerner iteration
+    let roots=[];
+    for(let k=0;k<n;k++){
+      const angle=2*Math.PI*k/n;
+      roots.push({re:Math.cos(angle)*0.9,im:Math.sin(angle)*0.9});
+    }
+    function polyEval(coeffs,z){
+      let re=0,im=0;
+      for(let i=0;i<coeffs.length;i++){
+        const newRe=re*z.re-im*z.im+coeffs[i];
+        const newIm=re*z.im+im*z.re;
+        re=newRe;im=newIm;
+      }
+      return {re,im};
+    }
+    function cDiv(a,b){const d=b.re*b.re+b.im*b.im;return{re:(a.re*b.re+a.im*b.im)/d,im:(a.im*b.re-a.re*b.im)/d};}
+    function cSub(a,b){return{re:a.re-b.re,im:a.im-b.im};}
+    function cMul(a,b){return{re:a.re*b.re-a.im*b.im,im:a.re*b.im+a.im*b.re};}
+    for(let iter=0;iter<80;iter++){
+      for(let i=0;i<n;i++){
+        const pv=polyEval(norm,roots[i]);
+        let prod={re:1,im:0};
+        for(let j=0;j<n;j++) if(j!==i) prod=cMul(prod,cSub(roots[i],roots[j]));
+        const delta=cDiv(pv,prod);
+        roots[i]=cSub(roots[i],delta);
+      }
+    }
+    return roots;
+  }
+
+  const zeros=compRoots(numCoeffs);
+  const poles=compRoots(denCoeffs);
+
+  let html='';
+  html+=`<div style="font-family:Share Tech Mono,monospace;font-size:.66rem;color:var(--bf);margin-bottom:5px">零點 (Zeros) ${zeros.length}個:</div>`;
+  zeros.forEach((z,i)=>{
+    const stable=z.re<0;
+    html+=`<div class="freq-marker" style="border-color:rgba(74,222,128,.25)"><span class="fm-label">z${i+1}</span><span class="fm-val">${F(z.re,4)}${z.im>=0?'+':''} ${F(z.im,4)}j</span><span class="fm-unit">${stable?'(左半)':'(右半)'}</span></div>`;
+  });
+  html+=`<div style="font-family:Share Tech Mono,monospace;font-size:.66rem;color:var(--err);margin:8px 0 5px">極點 (Poles) ${poles.length}個:</div>`;
+  const allStable=poles.every(p=>p.re<0);
+  poles.forEach((p,i)=>{
+    const stable=p.re<0;
+    html+=`<div class="freq-marker" style="border-color:${stable?'rgba(255,95,95,.2)':'rgba(255,95,95,.5)'}"><span class="fm-label">p${i+1}</span><span class="fm-val">${F(p.re,4)}${p.im>=0?'+':''} ${F(p.im,4)}j</span><span class="fm-unit" style="color:${stable?'var(--ok)':'var(--err)'}">${stable?'✓ 穩定':'✗ 不穩'}</span></div>`;
+  });
+  html+=`<div style="color:${allStable?'var(--ok)':'var(--err)'};font-size:.72rem;margin-top:6px">${allStable?'✓ 所有極點在左半平面，系統穩定':'⚠ 存在右半平面極點，系統不穩定'}</div>`;
+  res('pz-result', html);
+  drawPoleZero(zeros, poles);
+}
+
+function drawPoleZero(zeros, poles) {
+  const cvs=document.getElementById('pz-canvas');
+  const W=cvs.parentElement.clientWidth-36;
+  cvs.width=W; cvs.height=220;
+  const ctx=cvs.getContext('2d');
+  const cx=W/2,cy=110;
+  ctx.fillStyle='#07090f'; ctx.fillRect(0,0,W,220);
+  // Grid
+  ctx.strokeStyle='rgba(28,41,64,.5)'; ctx.lineWidth=0.5;
+  for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,220);ctx.stroke();}
+  for(let y=0;y<220;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  // Axes
+  ctx.strokeStyle='rgba(74,222,128,.2)'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,220);ctx.stroke();
+  ctx.fillStyle='rgba(74,222,128,.25)'; ctx.font='10px Share Tech Mono';
+  ctx.fillText('Re',W-22,cy-5); ctx.fillText('Im',cx+4,11);
+  // Stability boundary shade
+  ctx.fillStyle='rgba(255,95,95,.04)';
+  ctx.fillRect(cx,0,W-cx,220);
+  ctx.fillStyle='rgba(74,222,128,.04)';
+  ctx.fillRect(0,0,cx,220);
+
+  const all=[...zeros,...poles];
+  if(all.length===0) return;
+  const maxR=Math.max(...all.map(z=>Math.max(Math.abs(z.re),Math.abs(z.im))),0.5)*1.3;
+  const S=Math.min(cx,cy)/maxR*0.9;
+
+  zeros.forEach(z=>{
+    const px=cx+z.re*S, py=cy-z.im*S, r=7;
+    ctx.strokeStyle='#4ade80'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(px,py,r,0,2*Math.PI); ctx.stroke();
+  });
+  poles.forEach(p=>{
+    const px=cx+p.re*S, py=cy-p.im*S, r=7;
+    ctx.strokeStyle=p.re<0?'#ff5f5f':'#ff0000'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(px-r,py-r); ctx.lineTo(px+r,py+r); ctx.moveTo(px+r,py-r); ctx.lineTo(px-r,py+r); ctx.stroke();
+  });
+}
+
+// ── First-Order Filter ──
+let f1Type='RC-LP';
+function setF1Type(t){
+  f1Type=t;
+  const isRC=t.startsWith('RC');
+  document.getElementById('f1-rc-inputs').style.display=isRC?'':'none';
+  document.getElementById('f1-rl-inputs').style.display=isRC?'none':'';
+  document.querySelectorAll('#f1-type-strip .filter-tab').forEach((b,i)=>b.classList.toggle('active',['RC-LP','RC-HP','RL-LP','RL-HP'][i]===t));
+}
+let f1Chart=null;
+function calcF1(){
+  let numExpr,denExpr,fc,tau,isLP=f1Type.endsWith('LP');
+  if(f1Type.startsWith('RC')){
+    const R=v('f1-r'),C=v('f1-c')/1e6;
+    if([R,C].some(n=>isNaN(n)||n<=0)){err('f1-result','請輸入有效正值');return;}
+    tau=R*C; fc=1/(2*Math.PI*tau);
+    const wc=1/tau;
+    numExpr=isLP?'1':`s/${wc}`; denExpr=`s/${wc}+1`;
+    if(isLP){numExpr='1';denExpr=`${tau}*s+1`;}
+    else{numExpr=`${tau}*s`;denExpr=`${tau}*s+1`;}
+  } else {
+    const R=v('f1-r2'),L=v('f1-l')/1000;
+    if([R,L].some(n=>isNaN(n)||n<=0)){err('f1-result','請輸入有效正值');return;}
+    tau=L/R; fc=R/(2*Math.PI*L);
+    if(isLP){numExpr='1';denExpr=`${tau}*s+1`;}
+    else{numExpr=`${tau}*s`;denExpr=`${tau}*s+1`;}
+  }
+  const fq=v('f1-fq');
+  const omega_q=fq*2*Math.PI;
+  const H_q=evalH(numExpr,denExpr,omega_q,1);
+  const mag_q=20*Math.log10(math.abs(H_q));
+  const ph_q=math.arg(H_q)*180/Math.PI;
+
+  res('f1-result',
+    row('截止頻率 fc',smartF(fc)+'Hz')+
+    row('角截止 ωc',smartF(1/tau)+'rad/s')+
+    row('時間常數 τ',smartF(tau)+'s')+
+    row('類型',isLP?'低通 Low-Pass':'高通 High-Pass')+
+    row('Rolloff',isLP?'−20dB/decade':'+20dB/decade')+
+    row(`在 ${smartF(fq)}Hz 增益`,F(mag_q,2),'dB')+
+    row(`在 ${smartF(fq)}Hz 相位`,F(ph_q,2),'°')
+  );
+
+  // Draw response
+  if(f1Chart) f1Chart.destroy();
+  const {freqs,mags}=bodeData(numExpr,denExpr,-2,5,1,true);
+  const ctx=document.getElementById('f1-canvas').getContext('2d');
+  f1Chart=new Chart(ctx,{
+    type:'line',data:{datasets:[
+      {label:'增益',borderColor:'#fb923c',borderWidth:2,pointRadius:0,data:freqs.map((f,i)=>({x:f,y:mags[i]}))},
+      {label:`${smartF(fq)}Hz`,borderColor:'rgba(251,146,60,.4)',borderWidth:1,borderDash:[5,3],pointRadius:0,data:[{x:fq,y:-60},{x:fq,y:10}]}
+    ]},
+    options:{animation:false,responsive:true,scales:{x:{type:'logarithmic',title:{display:true,text:'頻率 (Hz)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}},y:{title:{display:true,text:'增益 (dB)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}}},plugins:{legend:{display:false},title:{display:true,text:`${f1Type} 頻率響應`,color:'#fb923c'}}}
+  });
+}
+
+// ── Second-Order Filter ──
+let f2Type='LP', f2Chart=null;
+function setF2Type(t){
+  f2Type=t;
+  document.querySelectorAll('#f2-type-strip .filter-tab').forEach((b,i)=>b.classList.toggle('active',['LP','HP','BP','BS'][i]===t));
+}
+function calcF2(){
+  const w0=v('f2-w0'),Q=v('f2-q'),K=v('f2-k');
+  if([w0,Q,K].some(n=>isNaN(n)||n<=0)){err('f2-result','請輸入有效正值');return;}
+  const w0_s=`${w0}`,bw_s=`${w0/Q}`;
+  let numExpr,denExpr;
+  const denom=`s^2+${w0/Q}*s+${w0*w0}`;
+  if(f2Type==='LP'){numExpr=`${K*w0*w0}`;denExpr=denom;}
+  else if(f2Type==='HP'){numExpr=`${K}*s^2`;denExpr=denom;}
+  else if(f2Type==='BP'){numExpr=`${K*w0/Q}*s`;denExpr=denom;}
+  else{numExpr=`${K}*(s^2+${w0*w0})`;denExpr=denom;}
+  const f0=w0/(2*Math.PI);
+  const typeLabel={LP:'低通',HP:'高通',BP:'帶通',BS:'帶阻'}[f2Type];
+  const BW=f0/Q;
+  res('f2-result',
+    row('中心頻率 f₀',smartF(f0)+'Hz')+
+    row('品質因數 Q',F(Q))+
+    row('頻寬 BW',smartF(BW)+'Hz')+
+    row('阻尼比 ζ',F(1/(2*Q)))+
+    row(`H(s) N(s)`,numExpr)+
+    row(`H(s) D(s)`,denom)+
+    row('特性',Q>0.5?Q===0.707?'Butterworth (最平坦)':Q>0.707?'欠阻尼 (可能有峰值)':'':'過阻尼')
+  );
+  if(f2Chart) f2Chart.destroy();
+  const fstart=Math.log10(f0)-2,fend=Math.log10(f0)+2;
+  const {freqs,mags}=bodeData(numExpr,denExpr,fstart,fend,1,true);
+  const ctx=document.getElementById('f2-canvas').getContext('2d');
+  f2Chart=new Chart(ctx,{
+    type:'line',data:{datasets:[{label:'增益',borderColor:'#fb923c',borderWidth:2,pointRadius:0,data:freqs.map((f,i)=>({x:f,y:mags[i]}))}]},
+    options:{animation:false,responsive:true,scales:{x:{type:'logarithmic',title:{display:true,text:'頻率 (Hz)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}},y:{title:{display:true,text:'增益 (dB)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}}},plugins:{legend:{display:false},title:{display:true,text:`${typeLabel}濾波器 Q=${Q}`,color:'#fb923c'}}}
+  });
+}
+
+// ── Butterworth / Chebyshev ──
+let bwType='butterworth', bwResp='LP', bwChart=null;
+function setBwType(t){bwType=t;document.querySelectorAll('#bw-type-strip .filter-tab').forEach((b,i)=>b.classList.toggle('active',['butterworth','chebyshev'][i]===t));document.getElementById('bw-ripple-row').style.display=t==='chebyshev'?'':'none';}
+function setBwResp(r){bwResp=r;document.querySelectorAll('#bw-resp-strip .filter-tab').forEach((b,i)=>b.classList.toggle('active',['LP','HP'][i]===r));}
+
+// Normalized Butterworth pole angles: pk = e^{j*pi*(2k+n-1)/(2n)} for left half plane
+function butterworthPoles(n) {
+  const poles=[];
+  for(let k=1;k<=n;k++){
+    const angle=Math.PI*(2*k+n-1)/(2*n);
+    poles.push({re:Math.cos(angle),im:Math.sin(angle)});
+  }
+  return poles;
+}
+
+function calcBw() {
+  const n=Math.round(v('bw-n')),fc=v('bw-fc'),ripple=v('bw-ripple')||1;
+  if(isNaN(n)||n<1||n>8||isNaN(fc)||fc<=0){err('bw-result','請輸入有效值 (n:1~8)');return;}
+  const wc=2*Math.PI*fc;
+  // Generate frequency response for Butterworth LP
+  const freqs=[],mags=[];
+  const isLP=bwResp==='LP';
+  for(let e=-2;e<=4;e+=0.04){
+    const f=Math.pow(10,e)*fc;
+    const omega=2*Math.PI*f;
+    const u=isLP?(omega/wc):(wc/omega); // normalized
+    let mag2;
+    if(bwType==='butterworth'){
+      mag2=1/(1+Math.pow(u,2*n));
+    } else {
+      // Chebyshev I: |H|² = 1/(1 + ε²·Tn²(Ω))
+      const eps=Math.sqrt(Math.pow(10,ripple/10)-1);
+      let Tn;
+      if(u<=1) Tn=Math.cos(n*Math.acos(u));
+      else Tn=Math.cosh(n*Math.acosh(u));
+      mag2=1/(1+eps*eps*Tn*Tn);
+    }
+    freqs.push(f);
+    mags.push(10*Math.log10(Math.max(mag2,1e-20)));
+  }
+  // Poles for Butterworth
+  const poles=butterworthPoles(n);
+  let html=row('階數 n',n)+row('截止頻率 fc',smartF(fc)+'Hz')+row('ωc',smartF(wc)+'rad/s');
+  if(bwType==='butterworth'){
+    html+=row('通帶平坦度','最大平坦 (Maximally Flat)')+row('-3dB @ fc','精確 −3.010 dB');
+  } else {
+    html+=row('通帶漣波',F(ripple),'dB')+row('ε',F(Math.sqrt(Math.pow(10,ripple/10)-1),4));
+  }
+  html+=row('響應類型',isLP?'低通 LP':'高通 HP')+row('過渡帶斜率',F(-20*n,0),'dB/decade');
+  // Pole positions
+  html+=`<div style="font-family:Share Tech Mono,monospace;font-size:.62rem;color:var(--dim2);margin-top:6px">正規化極點 (ω₀=1):</div>`;
+  poles.forEach((p,i)=>{ html+=`<div class="freq-marker" style="padding:3px 8px"><span class="fm-label">p${i+1}</span><span class="fm-val">${F(p.re,4)}+${F(p.im,4)}j</span></div>`; });
+  res('bw-result',html);
+
+  if(bwChart) bwChart.destroy();
+  const ctx=document.getElementById('bw-canvas').getContext('2d');
+  bwChart=new Chart(ctx,{
+    type:'line',
+    data:{datasets:[{label:'增益',borderColor:'#fb923c',borderWidth:2,pointRadius:0,data:freqs.map((f,i)=>({x:f,y:mags[i]}))}]},
+    options:{animation:false,responsive:true,scales:{x:{type:'logarithmic',title:{display:true,text:'頻率 (Hz)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}},y:{title:{display:true,text:'增益 (dB)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},min:-80,grid:{color:'rgba(28,41,64,.4)'}}},plugins:{legend:{display:false},title:{display:true,text:`${n}階 ${bwType==='butterworth'?'Butterworth':'Chebyshev I'} ${isLP?'LP':'HP'}`,color:'#fb923c'}}}
+  });
+}
+
+// ── Compare Bode ──
+let cmpChart=null;
+function drawCompareBode(){
+  const fstart=parseFloat(document.getElementById('cmp-fstart').value);
+  const fend=parseFloat(document.getElementById('cmp-fend').value);
+  const datasets=[];
+  let infoHtml='';
+  for(let i=1;i<=4;i++){
+    const num=document.getElementById(`cmp-num-${i}`).value.trim();
+    const den=document.getElementById(`cmp-den-${i}`).value.trim();
+    const label=document.getElementById(`cmp-label-${i}`).value.trim()||`曲線${i}`;
+    const color=document.getElementById(`cmp-color-${i}`).value;
+    if(!num||!den) continue;
+    try{
+      const {freqs,mags}=bodeData(num,den,fstart,fend,1,true);
+      const maxMag=Math.max(...mags.filter(isFinite));
+      const thresh=maxMag-3;
+      let f3=null;
+      for(let k=1;k<mags.length;k++) if((mags[k-1]-thresh)*(mags[k]-thresh)<0){f3=freqs[k];break;}
+      datasets.push({label,borderColor:color,borderWidth:2,pointRadius:0,data:freqs.map((f,j)=>({x:f,y:mags[j]}))});
+      infoHtml+=`<div class="freq-marker" style="border-color:${color}40"><span class="fm-label" style="color:${color}">${label}</span><span class="fm-val">${F(maxMag,1)}dB</span><span class="fm-unit">${f3?'-3dB @ '+smartF(f3)+'Hz':''}</span></div>`;
+    }catch(e){infoHtml+=`<div class="err-text">曲線${i}: ${e.message}</div>`;}
+  }
+  if(!datasets.length){err('cmp-info','請輸入至少一組有效的 N(s)/D(s)');return;}
+  if(cmpChart) cmpChart.destroy();
+  const ctx=document.getElementById('cmp-canvas').getContext('2d');
+  cmpChart=new Chart(ctx,{
+    type:'line',data:{datasets},
+    options:{animation:false,responsive:true,scales:{x:{type:'logarithmic',title:{display:true,text:'頻率 (Hz)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}},y:{title:{display:true,text:'增益 (dB)',color:'#4e6a8a'},ticks:{color:'#4e6a8a'},grid:{color:'rgba(28,41,64,.4)'}}},plugins:{legend:{display:true,labels:{color:'#b8d0e8',font:{family:'Share Tech Mono',size:11}}},title:{display:true,text:'頻率響應比較',color:'#fb923c'}}}
+  });
+  res('cmp-info',infoHtml||'計算完成');
+}
+
+// Init
+drawAdvBode();
 
 // ══════════════ KEYBOARD + AUTO-SAVE ══════════════
 document.addEventListener('keydown',e=>{
